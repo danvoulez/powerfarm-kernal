@@ -22,7 +22,7 @@
 │  │ pf-agent (ADK 2.0)    │  │   │  Postgres:              │
 │  │  agent orchestration  │──┼──▶│   • objects (CAS)       │
 │  │  proposes Commands    │  │   │   • acts (append-only   │
-│  └───────────────────────┘  │   │     + total order)      │
+│  └───────────────────────┘  │   │     causal DAG)         │
 │  ┌───────────────────────┐  │   │   • relations, registry │
 │  │ pf-worker             │  │   │   • identities, keys    │
 │  │  projectors, jobs     │──┼──▶│  Edge Functions:        │
@@ -51,8 +51,8 @@
 |---|---|---|
 | Agent runtime | **Google ADK 2.0 (Python)** | Orchestration, tools, HITL pause/resume, `adk eval` — maps directly onto Trajectory/Review concepts; open source, runs anywhere |
 | Model access | `google-genai` SDK, **Gemini API key** (or any OpenAI-compatible endpoint) | An API key is not infrastructure lock-in; the kernel never cares which model proposed a Command |
-| Canonical form + hashing | **canonical CBOR (RFC 8949) + SHA-256, domain-separated** — `H("powerfarm:<kind>:v1" ‖ cbor)` | Deterministic, spec-pinned, tiny dependency; the tag makes object *species* part of identity (PF-22). *(protobuf from Google stays an option for wire schemas, but never for hashing)* |
-| Kernel storage | **Supabase Postgres** | Insert-only Acts + sequences give PF-12 total order for free; RLS as coarse isolation under Rules; Realtime ships projection updates with zero code |
+| Canonical form + hashing | **JCS (RFC 8785) + SHA-256, domain-separated** — `SHA-256("powerfarm:<kind>:v1" ‖ utf8(JCS(value)))` | Golden vectors exist and are Genesis-bound (`conformance/golden-vectors/`); every browser can verify hashes with zero codec deps; the tag makes object *species* part of identity (PF-22). Binary payloads ride as base64url strings; exact quantities use integer minor units, never floats |
+| Kernel storage | **Supabase Postgres** | Insert-only Acts with causal parents; `seq` is a cursor, not order (PF-12); RLS as coarse isolation under Rules; Realtime ships projection updates with zero code |
 | API edge | **Supabase Edge Functions** (Deno, ~200 lines) | Command intake, signature verification, idempotency; nothing stateful lives here |
 | Long-running work | **`pf-worker`** container (Python) on the VPS | Projectors, scheduler ticks, review notifications — Edge Functions are RAM/CPU-capped, so no agent or projector code runs there |
 | Deployment target | **1 VPS (Hetzner CX22-class) + Caddy + Docker Compose** | One file defines the whole self-hosted side; TLS automatic |
@@ -68,9 +68,9 @@
 ```
 powerfarm/
 ├── kernel/                  # THE CONSTITUTION — small, zero-warning, 100% tested
-│   ├── canon.py             # canonical CBOR encode; hash = object id
-│   ├── types.py             # Object, Act, Relation, Command, Context (pydantic, frozen)
-│   ├── rules.py             # authorize(I,C,X,S,R) — pure function, declared context keys
+│   ├── canon.py             # RFC 8785 JCS encode; domain-tagged hash = object id
+│   ├── types.py             # Identity, Act, Relation, Command, Context (frozen dataclasses)
+│   ├── rules.py             # authorize(I,C,X,G≤c,R_c) — pure function, declared context keys
 │   ├── commit.py            # the ONLY writer of acts; runs inside one DB transaction
 │   └── project.py           # deterministic projector protocol P(G_≤t)
 ├── genesis/
@@ -84,7 +84,7 @@ powerfarm/
 │   └── evals/               # adk eval suites → simulated trajectories (simulated_from)
 ├── worker/                  # pf-worker: projectors + scheduler + notifications
 ├── edge/pf-api/             # Supabase Edge Function: intake + verify (Deno)
-├── conformance/             # PF-01…PF-20 as executable tests against a live DB
+├── conformance/             # PF-01…PF-26 executable tests + golden-vectors/
 ├── docker-compose.yml       # caddy + pf-agent + pf-worker
 ├── Caddyfile
 └── .github/workflows/ci.yml
@@ -220,7 +220,7 @@ Each phase ends green in CI before the next begins.
 - Every new Act type lands with: registry migration + conformance test + projector handling.
 - No writes outside `commit()`. Any PR adding one is rejected by review *and* by a CI check (static scan for `INSERT INTO acts` outside `kernel/commit.py`).
 - Fail loud: missing context key, unknown type, stale projection stamp, authorization against a moved cut → hard error, never a default.
-- Canonicalization is pinned by golden vectors in CI — if hashes drift, nothing merges.
+- Canonicalization is pinned by the six golden JCS vectors in CI — every implementation passes all of them byte-exactly, or nothing merges.
 - `seq` is a cursor, never an argument in a correctness proof; causal claims cite parents.
 - Determinism: projectors never read wall-clock, randomness, or the network.
 - Secrets in GitHub Secrets / Supabase Vault only; plaintext never enters an Act (PF-18).
