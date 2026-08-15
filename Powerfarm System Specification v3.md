@@ -1,6 +1,6 @@
 # Powerfarm System Specification — v3
 
-**Status:** Revision 3. Hardened against the second review: commit order is now honest (causal ancestry is constitutional; linearization is a projection), authorization declares the graph cut it saw (closing the TOCTOU gap), external effects have their own phase protocol, constitutional change is limited to amendment-protocol-or-fork, hashing is domain-separated, and time is split into three distinct notions with a temporal-anchoring hook. Revision 2 had incorporated the first review: Incorporates the refinements raised in the technical review of v1: Context is now formally defined, the Command lifecycle is fully represented as Acts, content addressing forbids embedding, history has a total commit order, Identity authentication and key rotation are specified, Registry and Rule definitions are versioned and referenced by Acts, review semantics are Act-complete, projectors are registered deterministic objects, confidentiality is separated from history, external-event Acts are typed as observations, and a constitutional core may be entrenched.
+**Status:** Revision 3.1 — canonicalization switched from CBOR to **JCS (RFC 8785)** with a Genesis-bound golden vector suite. Revision 3 hardened against the second review: commit order is now honest (causal ancestry is constitutional; linearization is a projection), authorization declares the graph cut it saw (closing the TOCTOU gap), external effects have their own phase protocol, constitutional change is limited to amendment-protocol-or-fork, hashing is domain-separated, and time is split into three distinct notions with a temporal-anchoring hook. Revision 2 incorporated the first review: Context formally defined, Command lifecycle fully represented as Acts, content addressing forbids embedding, Identity authentication and key rotation specified, Registry and Rule definitions versioned and referenced by Acts, review semantics Act-complete, projectors registered deterministic objects, confidentiality separated from history, external-event Acts typed as observations, and a constitutional core entrenched.
 
 ## 0. Definition
 
@@ -416,18 +416,25 @@ An implementation MUST NOT rely on a client-supplied arbitrary identifier as pro
 
 ### 10.1 Canonicalization and Reference Discipline
 
-Canonicalization is versioned and bound at Genesis (`canonicalization_version`, `hash_algorithm`), and MUST be enforced identically everywhere. Canonical form fully determines field ordering, number formatting, encoding, and relation ordering.
+Canonicalization is versioned and bound at Genesis (`canonicalization_version`, `hash_algorithm`), and MUST be enforced identically everywhere.
+
+**The canonical form is JCS — RFC 8785 JSON Canonicalization Scheme.** Consequences:
+
+- Field ordering is locale-independent lexicographic by UTF-16 code unit; number formatting follows the ECMAScript `Number::toString` algorithm; Unicode is preserved exactly as provided (no normalization — the `unicode` vector is constitutional proof).
+- Any conforming JSON tooling — including every browser's `JSON.stringify` plus a JCS shim — can verify a Powerfarm hash without a codec dependency. The verifier needs only UTF-8 and SHA-256.
+- Binary payloads are carried as base64url strings inside JSON; they are hashed as their encoded form, never as raw bytes.
+- Floats are legal but treacherous: implementations MUST pass the `values` golden vector (which covers `333333333.33333329`, `1E30`, `4.50`, `2e-3`, `1e-27`). Money and other exact quantities SHOULD use integer minor units or strings.
 
 All object references MUST be **by content hash, never by embedded value**. Embedding by value is forbidden. This guarantees that content addressing is acyclic at the object level even when the typed relation graph contains cycles (§13.3), and makes every object's hash well-founded.
 
-**Domain separation.** Hashes MUST be computed over a domain-tagged preimage, e.g.:
+**Domain separation.** Hashes MUST be computed over a domain-tagged preimage:
 
 ```
-H("powerfarm:act:v1"      || canonical_cbor(act))
-H("powerfarm:relation:v1" || canonical_cbor(relation))
+SHA-256( "powerfarm:act:v1"      || utf8( JCS(act) ) )
+SHA-256( "powerfarm:relation:v1" || utf8( JCS(relation) ) )
 ```
 
-so that identity encodes *which species of object* is being identified, not merely identical bytes. The tag namespace and version are bound at Genesis. The conformance suite MUST include golden canonicalization/hash vectors (PF-22).
+so that identity encodes *which species of object* is being identified, not merely identical bytes. The tag namespace and version are bound at Genesis. The conformance suite MUST include the golden canonicalization/hash vector suite (`values`, `arrays`, `unicode`, `french`, `weird`, `structures` — each with input JSON, expected canonical UTF-8 hex, and expected plain and domain-tagged SHA-256) and every implementation MUST pass all vectors byte-exactly before it may participate in a universe (PF-22).
 
 **Occurrence identity.** An Act's hash is its unique historical identity: the same content-addressed Act appears at most once in a universe's history (enforced by uniqueness on `acts.hash`). Re-submitting identical content is idempotent — it returns the existing Act, it never creates a second placement. Semantic identity and historical placement are therefore the same thing for Acts; anything needing a *new* occurrence must differ in content (e.g. a distinct `when` or causal parent).
 
@@ -680,9 +687,9 @@ Constitutional Rules and definitions (§4.2) are excluded from amendment by any 
 │ State                                 │
 │                                       │
 │ Structural laws:                      │
-│ CAS (reference-by-hash only)          │
+│ CAS (reference-by-hash, domain-tagged)│
 │ Typed Relations                       │
-│ Append-only, totally ordered History  │
+│ Append-only History, Causal DAG       │
 │ Acyclic Constitutional Dependency     │
 └───────────────────────────────────────┘
 ```
@@ -883,7 +890,9 @@ A conforming Powerfarm System MUST satisfy at least:
 
 ---
 
-## 27. Changelog from v2 to v3
+## 27. Changelog from v2 to v3 (incl. 3.1)
+
+0. **(3.1) Canonicalization switched to JCS / RFC 8785** — golden vectors (`values`, `arrays`, `unicode`, `french`, `weird`, `structures`) bound at Genesis; browsers become first-class verifiers; binary payloads base64url; exact quantities avoid floats.
 
 1. **Commit order made honest (review point 1).** Ancestry DAG is constitutional; `seq` demoted to operational cursor with gaps; linearization is a projection. PF-12 rewritten.
 2. **Referential and occurrence integrity (point 2).** `acts.hash` unique; Act hash = unique historical identity; resubmission idempotent (PF-23).
@@ -898,9 +907,9 @@ A conforming Powerfarm System MUST satisfy at least:
 1. Context `X` formally defined as a registered, typed map; Rules declare read keys (§2.1, PF-14).
 2. Command lifecycle fully represented as Acts; pending/expired/superseded semantics defined (§6.1, §8.1, PF-15).
 3. Embedding by value forbidden; references by hash only; canonicalization versioned and Genesis-bound (§10.1, PF-11).
-4. Total commit order introduced via sequencer/consensus; history cuts defined over it (§10.2, PF-12).
+4. Total commit order introduced via sequencer/consensus; history cuts defined over it (§10.2, PF-12) — **superseded by v3 item 1**.
 5. Identity authentication and key rotation specified; rotation preserves stable Identity (§5.1).
-6. Registry and Rule definitions versioned and referenced by Acts; constitutional core introduced (§4.1–4.2, PF-13).
+6. Registry and Rule definitions versioned and referenced by Acts; constitutional core introduced (§4.1–4.2, PF-13 → renumbered PF-21 in v3).
 7. `require_review` made Act-complete: `ReviewRequested`, `AuthorizationReviewed`, `AuthorizationResolved`; decisions never mutated (§8.1).
 8. Projectors registered with content-addressed code; materializations carry `projector_hash` + `history_cut` (§15.1, PF-16).
 9. Confidentiality separated from history via ciphertext/commitment discipline (§20, PF-18).
