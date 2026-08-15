@@ -8,6 +8,7 @@ uv.lock
 dist/
 build/
 *.egg-info/
+supabase/.temp/
 bootstrap-receipt.json
 ledgers/
 canon/

@@ -210,12 +210,13 @@ the production ledger and do not define the database write path.
 
 | Migration | Status | Purpose |
 |---|---|---|
-| `20260815060311_genesis.sql` | present | Creates the six constitutional tables, core indexes, append-only trigger, and initial revokes |
-| `20260815060331_auth_boundary.sql` | present | Adds Supabase user to Powerfarm identity mapping, OAuth application projection, and transaction-bound authorization proofs |
-| `20260815060432_harden_rls_and_trigger.sql` | present | Enables RLS on kernel tables and pins the append-only trigger function search path |
+| `20260815060311_powerfarm_baseline.sql` | present | Clean idempotent baseline embedding the schema already present in the live database: six constitutional tables, auth boundary tables, indexes, append-only trigger, RLS enables, and baseline revokes |
 
-These migrations are idempotent and are applied by `deploy/macos/install.sh` and
+This baseline is idempotent and is applied by `deploy/macos/install.sh` and
 `deploy/macos/update.sh` through `psql "$DATABASE_URL" -v ON_ERROR_STOP=1`.
+It is a psql-pack baseline, not a remote database reset. If the project later
+switches to Supabase CLI migration history as the deploy source of truth, first
+reconcile remote history with `supabase migration squash` / `repair`.
 
 ### 10.3 Migrations Still Needed
 
