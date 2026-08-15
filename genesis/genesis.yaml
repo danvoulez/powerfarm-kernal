@@ -1,0 +1,20 @@
+specification: powerfarm-system-v3
+canonicalization: rfc8949-deterministic-v1
+hash: sha256
+domain_namespace: powerfarm
+commit_gate: kernel.commit.CommitGate
+constitutional_rules:
+  - append-only-acts
+  - reference-by-hash
+  - declared-decision-cut
+  - amendment-or-fork
+temporal_anchor_relations:
+  - anchored_at
+  - notarized_by
+genesis_order:
+  - GenesisCreated
+  - RegistryCreated
+  - RootIdentityCreated
+  - RootAuthorityGranted
+  - GenesisClosed
+

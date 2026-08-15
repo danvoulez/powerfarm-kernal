@@ -1,0 +1,50 @@
+{
+  "suite": "powerfarm-canonicalization-v1",
+  "canonicalization": "RFC8785-JCS",
+  "hash": "sha256",
+  "domain_tag_format": "powerfarm:<kind>:<version> || utf8(jcs(value))",
+  "vectors": [
+    {
+      "name": "values",
+      "input": "values.json",
+      "expected_hex": "values.txt",
+      "canonical_utf8_sha256": "2d5e01a318d0f0879ab568c4be289c8b1f64ef8921a53c6277d5e069978baacb",
+      "domain_tagged_example": "d6dd53eac6cdbe5106aaa79fc4d9eb607933bcca164b0886c774bff5d7d09033"
+    },
+    {
+      "name": "arrays",
+      "input": "arrays.json",
+      "expected_hex": "arrays.txt",
+      "canonical_utf8_sha256": "099601b171cafed97c333f8878d68e7f8c8f795412adb34b2fdcf0e7c7beac42",
+      "domain_tagged_example": "40aa5922d8aedb0f4f24d40875e3591a0096d575819eecfd699c78bbb36d3685"
+    },
+    {
+      "name": "unicode",
+      "input": "unicode.json",
+      "expected_hex": "unicode.txt",
+      "canonical_utf8_sha256": "0d99aad92a125196ff887876643fd3206786a84ddce2cee52ba4ad256d2381d3",
+      "domain_tagged_example": "703d254ff3a407af2f181c9cb00d2303ec01b7a4cb5f76976ef6320a4450db0a"
+    },
+    {
+      "name": "french",
+      "input": "french.json",
+      "expected_hex": "french.txt",
+      "canonical_utf8_sha256": "d99d0ebdcb0033cb858cfa830ae46bc0fb3309413b271f1da828c89901a27ed5",
+      "domain_tagged_example": "810fedf244a55072740940f0edd88e7b7af4843041953e2f4cf2f82dd21070fd"
+    },
+    {
+      "name": "weird",
+      "input": "weird.json",
+      "expected_hex": "weird.txt",
+      "canonical_utf8_sha256": "6af595a9aa80110b964b4de3f82a05fa6ae7423005019bacfa2620dddc4e94d1",
+      "domain_tagged_example": "3328cf15fe736c80d4402e772d265d8c6b46637ab539085879350413b9bf7005"
+    },
+    {
+      "name": "structures",
+      "input": "structures.json",
+      "expected_hex": "structures.txt",
+      "canonical_utf8_sha256": "605f65004ec2db7692522a0852c22f1c989e036d547e88963d1a3143cf3195d5",
+      "domain_tagged_example": "b8e3ba7a182a83d0e07b1eaaf44b0c390b039bc770e65a48408501af90ca27d5"
+    }
+  ]
+}
