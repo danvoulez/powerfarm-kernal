@@ -29,6 +29,22 @@ mypy
 python -m genesis.ceremony
 ```
 
+## macOS LAB Install
+
+Powerfarm runs directly on the Mac LAB with launchd. Docker and Compose are not
+part of the deployment contract.
+
+```bash
+cp deploy/macos/powerfarm.env.example deploy/macos/powerfarm.env
+$EDITOR deploy/macos/powerfarm.env
+deploy/macos/install.sh --env deploy/macos/powerfarm.env
+deploy/macos/smoke.sh --env deploy/macos/powerfarm.env
+```
+
+The pack owns the local worker LaunchAgent, the dedicated Cloudflare Tunnel
+LaunchAgent, Supabase migration application, Cloudflare DNS routing for
+`powerfarm.app`, and versioned install receipts.
+
 Bootstrap V0 can be exercised in a disposable LAB directory:
 
 ```bash

@@ -1,0 +1,19 @@
+{
+  "name": "powerfarm-macos-lab",
+  "version": "0.1.0",
+  "platform": "macos-launchd",
+  "services": [
+    "com.powerfarm.worker",
+    "com.powerfarm.tunnel"
+  ],
+  "cloudflare": {
+    "tunnel": "powerfarm-lab",
+    "hostnames": [
+      "api.powerfarm.app"
+    ]
+  },
+  "supabase": {
+    "migrations_dir": "supabase/migrations",
+    "apply_with": "psql"
+  }
+}
