@@ -228,7 +228,9 @@ when the migration is created.
 | `identity_key_lookup.sql` | Add indexes/views needed to find currently valid keys at a history cut | Keep as projection/helper only; stable identity remains Act-derived |
 | `commit_gate_rpc.sql` | Add one database function for atomic object+act insertion | Function must validate append-only assumptions, uniqueness, parent existence, payload existence, registry refs, and idempotent command replay |
 | `ledger_integrity_checks.sql` | Add constraints/triggers for ancestry shape and JSON hash-array sanity | Full acyclic proof may remain in adapter/conformance until recursive SQL is worth the weight |
-| `projection_metadata.sql` | Add generic projection metadata tables with `projector_hash` and `history_cut` | No domain projections yet; just the reusable stamp/invalidator surface |
+| `projection_metadata.sql` | Add generic projection metadata, graph materialization, checkpoint, and rebuild-run tables | No domain projections yet; just the reusable stamp/invalidator surface |
+| `adk_integration_substrate.sql` | Add non-authoritative ADK event/workflow/tool/artifact staging tables | Stores ADK envelopes as JSONB with stable hashes; Powerfarm Acts remain truth |
+| `trajectory_projection_substrate.sql` | Add trajectory selector, run, node, edge, feature, and annotation projection tables | Supports trajectory engineering as rebuildable graph projections over Acts/Relations |
 | `rls_grants_final.sql` | Finalize role permissions for `anon`, `authenticated`, local service role, and RPC execution | Browser roles get no direct kernel table writes |
 | `migration_receipts.sql` | Optional pack receipt table recording applied pack version/git commit | Mirrors local `POWERFARM_HOME/receipts`; useful for remote audit |
 
@@ -331,7 +333,224 @@ Response codes:
 The endpoint may initially run only on localhost and through
 `api.powerfarm.app`; it must not expose a direct database capability to clients.
 
-### 10.7 Immediate Implementation Order
+### 10.7 Projection Substrate
+
+Projections are vital and need their own storage substrate. They are not a
+second source of truth; they are queryable, rebuildable graph views over the
+ledger.
+
+Minimum generic tables for `projection_metadata.sql`:
+
+```sql
+projection_runs(
+  run_hash text primary key,
+  projector_hash text not null,
+  input_cut jsonb not null,
+  input_cut_hash text not null,
+  status text not null check (status in ('running','complete','failed')),
+  started_at timestamptz not null default now(),
+  finished_at timestamptz,
+  error jsonb
+);
+
+projection_checkpoints(
+  projector_hash text primary key,
+  input_cut jsonb not null,
+  input_cut_hash text not null,
+  high_water_seq bigint,
+  run_hash text not null references projection_runs(run_hash),
+  updated_at timestamptz not null default now()
+);
+
+proj_graph_nodes(
+  projector_hash text not null,
+  input_cut_hash text not null,
+  node_hash text not null,
+  node_kind text not null,
+  labels jsonb not null default '[]'::jsonb,
+  properties jsonb not null default '{}'::jsonb,
+  primary key (projector_hash, input_cut_hash, node_hash)
+);
+
+proj_graph_edges(
+  projector_hash text not null,
+  input_cut_hash text not null,
+  edge_hash text not null,
+  from_hash text not null,
+  to_hash text not null,
+  edge_type text not null,
+  properties jsonb not null default '{}'::jsonb,
+  primary key (projector_hash, input_cut_hash, edge_hash)
+);
+```
+
+Rules:
+
+- `input_cut_hash` is the canonical hash of the ancestry-closed Act set used by
+  the projector;
+- `high_water_seq` is an optimization cursor only;
+- graph nodes/edges must always be reconstructible from `objects`, `acts`,
+  `relations`, and the registered projector version;
+- failed projection runs keep their error payload for debugging but confer no
+  authority;
+- deleting every `proj_*` table must not delete history.
+
+### 10.8 ADK Integration Preparation
+
+ADK 2.0 is graph-oriented: agents, tools, and functions execute as nodes in a
+workflow graph; Events carry workflow metadata such as `node_info` and `output`;
+callbacks are the safe capture points; long-running tools model pause/resume and
+HITL; MCP/A2A expose external tool and agent boundaries.
+
+Powerfarm should prepare for ADK without depending on ADK as truth.
+
+Minimum tables for `adk_integration_substrate.sql`:
+
+```sql
+adk_event_envelopes(
+  event_hash text primary key,
+  adk_app text not null,
+  adk_session_id text not null,
+  invocation_id text,
+  author text,
+  node_info jsonb,
+  output jsonb,
+  actions jsonb,
+  event_json jsonb not null,
+  observed_at timestamptz not null default now(),
+  linked_act text references acts(hash)
+);
+
+adk_workflow_nodes(
+  node_hash text primary key,
+  workflow_hash text not null,
+  node_name text not null,
+  node_kind text not null,
+  adk_node_info jsonb not null default '{}'::jsonb
+);
+
+adk_tool_calls(
+  tool_call_hash text primary key,
+  event_hash text not null references adk_event_envelopes(event_hash),
+  tool_name text not null,
+  args_hash text,
+  result_hash text,
+  command_hash text,
+  status text not null check (status in ('proposed','submitted','committed','failed'))
+);
+
+adk_artifact_refs(
+  artifact_ref_hash text primary key,
+  event_hash text references adk_event_envelopes(event_hash),
+  artifact_name text not null,
+  artifact_version text,
+  mime_type text,
+  object_hash text references objects(hash),
+  storage_uri text
+);
+```
+
+Rules:
+
+- ADK envelopes are observations/staging records until linked to Acts;
+- tools that want consequences return or submit Powerfarm Commands;
+- ADK session state can be imported as context, but not as authoritative state;
+- ADK artifacts become Powerfarm objects or storage commitments before they are
+  relied upon by Rules;
+- callbacks should capture telemetry and proposed Commands, not mutate the
+  ledger directly;
+- long-running tools map naturally to `ReviewRequested`, `AuthorizationReviewed`,
+  external-effect phases, and trajectory pause/resume projections.
+
+### 10.9 Trajectory Engineering Substrate
+
+Trajectory engineering needs a first-class projection substrate because it asks
+questions over paths, branches, evidence, retries, alternatives, simulations,
+and outcomes. It should operate over the graph without mutating history.
+
+Minimum tables for `trajectory_projection_substrate.sql`:
+
+```sql
+trajectory_selectors(
+  selector_hash text primary key,
+  name text not null,
+  purpose text not null,
+  selector_json jsonb not null,
+  projector_hash text not null
+);
+
+trajectory_runs(
+  run_hash text primary key,
+  selector_hash text not null references trajectory_selectors(selector_hash),
+  input_cut jsonb not null,
+  input_cut_hash text not null,
+  status text not null check (status in ('running','complete','failed')),
+  created_at timestamptz not null default now(),
+  error jsonb
+);
+
+trajectory_nodes(
+  run_hash text not null references trajectory_runs(run_hash),
+  node_hash text not null,
+  node_role text not null,
+  depth integer,
+  branch_key text,
+  properties jsonb not null default '{}'::jsonb,
+  primary key (run_hash, node_hash, node_role)
+);
+
+trajectory_edges(
+  run_hash text not null references trajectory_runs(run_hash),
+  edge_hash text not null,
+  from_hash text not null,
+  to_hash text not null,
+  edge_role text not null,
+  polarity text check (polarity in ('supports','blocks','contradicts','continues','forks','joins')),
+  properties jsonb not null default '{}'::jsonb,
+  primary key (run_hash, edge_hash)
+);
+
+trajectory_features(
+  run_hash text not null references trajectory_runs(run_hash),
+  subject_hash text not null,
+  feature_kind text not null,
+  value jsonb not null,
+  primary key (run_hash, subject_hash, feature_kind)
+);
+
+trajectory_annotations(
+  annotation_hash text primary key,
+  run_hash text not null references trajectory_runs(run_hash),
+  subject_hash text not null,
+  annotation_type text not null,
+  payload jsonb not null,
+  author_identity text references identities(hash),
+  source_act text references acts(hash)
+);
+```
+
+Initial trajectory roles:
+
+- `observed`: built from accepted real Acts;
+- `simulated`: built from simulated Acts or ADK eval traces;
+- `crafted`: built from human/agent edited trajectory objects;
+- `candidate`: proposed path not yet accepted as occurrence;
+- `counterfactual`: intentionally non-occurring branch for analysis.
+
+Rules:
+
+- trajectory tables are projections unless an annotation is explicitly committed
+  as an Act;
+- `simulated_from`, `crafted_from`, `forked_from`, `supports`, `contradicts`,
+  and `matched_to` remain typed relations in the canonical graph;
+- trajectory features are replaceable analysis outputs, not facts;
+- a trajectory run is valid only for its selector, projector, and input cut;
+- fold/score/risk models should write to `trajectory_features`, not mutate Acts.
+
+This gives us the substrate for trajectory engineering without needing a full
+domain ontology on day one.
+
+### 10.10 Immediate Implementation Order
 
 1. Add `worker/postgres_store.py` and tests against a temporary Postgres or a
    transaction-rolled Supabase connection.
@@ -342,7 +561,11 @@ The endpoint may initially run only on localhost and through
    call, and `CommitGate(PostgresStore(...)).commit(...)`.
 4. Add a smoke path that inserts a payload object, submits a signed Command,
    verifies Act hash, then repeats the same request and gets the same Act.
-5. Add `rls_grants_final.sql` after the exact worker database role is chosen.
+5. Add `projection_metadata.sql` before any domain projection.
+6. Add `adk_integration_substrate.sql` before introducing ADK runtime state.
+7. Add `trajectory_projection_substrate.sql` before implementing trajectory
+   scoring, fold analysis, or simulated/crafted path work.
+8. Add `rls_grants_final.sql` after the exact worker database role is chosen.
 
 This is enough to make the ledger real without founding a religion around every
 future domain.
