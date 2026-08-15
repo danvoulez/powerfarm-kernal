@@ -13,6 +13,12 @@ Specification v3** and the accompanying implementation plan. The current foundat
 - a reproducible Genesis ceremony and agent-side signed Command proposals; and
 - executable conformance coverage for the kernel invariants implemented here.
 
+The repository also carries the earlier institutional bootstrap package from the
+Kimi workspace under `bootstrap/v0/`. That package is preserved as a one-shot
+ledger bootstrap artifact: useful for LAB ceremony experiments and comparison
+against the kernel genesis ceremony, but not a replacement write path for
+production Acts.
+
 ## Development
 
 ```bash
@@ -21,6 +27,15 @@ pytest
 ruff check .
 mypy
 python -m genesis.ceremony
+```
+
+Bootstrap V0 can be exercised in a disposable LAB directory:
+
+```bash
+export POWERFARM_HOME=/tmp/powerfarm-lab
+mkdir -p "$POWERFARM_HOME"
+python bootstrap/v0/generate_test_keys.py --home "$POWERFARM_HOME" --write-manifest
+python bootstrap/v0/bootstrap.py bootstrap --home "$POWERFARM_HOME"
 ```
 
 Agent tools must return Command proposals. They must not connect to the database. Production

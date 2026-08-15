@@ -17,6 +17,7 @@ include = ["kernel*", "genesis*", "worker*", "agent*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "conformance"]
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100

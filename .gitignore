@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv*/
+uv.lock
+dist/
+build/
+*.egg-info/
+bootstrap-receipt.json
+ledgers/
+canon/
+genesis/founding-key.pem
+genesis/founding-key.pub.pem
+genesis/fingerprint.sha256

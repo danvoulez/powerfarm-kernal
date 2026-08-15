@@ -1,0 +1,13 @@
+{
+  "institution": "powerfarm",
+  "bootstrapAuthority": "founding:<PLACEHOLDER_FINGERPRINT>",
+  "allowed": [
+    "rules.genesis",
+    "institution.registered",
+    "principal.registered",
+    "authority.granted",
+    "institution.transitioned",
+    "bootstrap.completed"
+  ],
+  "terminatesOn": "bootstrap.completed"
+}
