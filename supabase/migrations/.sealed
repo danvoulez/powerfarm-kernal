@@ -1,0 +1,2 @@
+Migrations in this directory are append-only after this marker reaches main.
+CI rejects edits, renames, or deletion of SQL files already present in main.

@@ -1,0 +1,20 @@
+{
+  "name": "Powerfarm Kernel",
+  "url": "https://powerfarm.app",
+  "description": "Signed release and workflow integration for the Powerfarm kernel",
+  "hook_attributes": {
+    "url": "https://api.powerfarm.app/integrations/github/webhook",
+    "active": true
+  },
+  "public": false,
+  "request_oauth_on_install": false,
+  "default_permissions": {
+    "actions": "read",
+    "contents": "read"
+  },
+  "default_events": [
+    "push",
+    "release",
+    "workflow_run"
+  ]
+}

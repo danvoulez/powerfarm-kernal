@@ -4,14 +4,8 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .venv*/
-uv.lock
 dist/
 build/
 *.egg-info/
 supabase/.temp/
-bootstrap-receipt.json
-ledgers/
-canon/
-genesis/founding-key.pem
-genesis/founding-key.pub.pem
-genesis/fingerprint.sha256
+.DS_Store

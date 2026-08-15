@@ -129,6 +129,17 @@ create table if not exists public.authorization_proofs (
   consumed_act text references public.acts(hash)
 );
 
+-- Installer-owned migration ledger. The baseline is always safe to re-run;
+-- later files are checksum-verified against this table before execution.
+create table if not exists public.powerfarm_schema_migrations (
+  version text primary key check (version ~ '^[0-9]{14}$'),
+  name text not null,
+  checksum_sha256 text not null check (checksum_sha256 ~ '^[0-9a-f]{64}$'),
+  pack_version text,
+  git_commit text check (git_commit is null or git_commit ~ '^[0-9a-f]{40}$'),
+  applied_at timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------------------
 -- Defensive RLS and grants baseline
 -- ---------------------------------------------------------------------------
@@ -142,6 +153,7 @@ alter table public.identity_keys enable row level security;
 alter table public.identity_links enable row level security;
 alter table public.oauth_applications enable row level security;
 alter table public.authorization_proofs enable row level security;
+alter table public.powerfarm_schema_migrations enable row level security;
 
 revoke update, delete, truncate on public.acts from public;
 
@@ -159,5 +171,15 @@ revoke all
      public.oauth_applications,
      public.authorization_proofs
   from public, anon, authenticated;
+
+revoke all
+  on public.objects,
+     public.acts,
+     public.relations,
+     public.registry,
+     public.identities,
+     public.identity_keys,
+     public.powerfarm_schema_migrations
+  from anon, authenticated, service_role;
 
 commit;

@@ -4,16 +4,30 @@
   "platform": "macos-launchd",
   "services": [
     "com.powerfarm.worker",
-    "com.powerfarm.tunnel"
+    "com.powerfarm.tunnel",
+    "com.powerfarm.updater"
   ],
   "cloudflare": {
     "tunnel": "powerfarm-lab",
     "hostnames": [
-      "api.powerfarm.app"
+      "api.powerfarm.app",
+      "app.powerfarm.app"
     ]
   },
   "supabase": {
     "migrations_dir": "supabase/migrations",
-    "apply_with": "psql"
+    "apply_with": "psql",
+    "auth_config": "supabase/config.toml",
+    "oauth_clients": "supabase/oauth-clients.json",
+    "storage_buckets": [
+      "powerfarm-ledger",
+      "powerfarm-packages"
+    ]
+  },
+  "release": {
+    "repository": "danvoulez/powerfarm-kernal",
+    "channel": "stable",
+    "artifact": "powerfarm-{version}-macos-arm64.tar.gz",
+    "attestation": "github-artifact-attestation"
   }
 }

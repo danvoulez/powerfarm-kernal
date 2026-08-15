@@ -1,0 +1,13 @@
+{
+  "clients": [
+    {
+      "client_name": "Powerfarm CLI",
+      "client_uri": "https://powerfarm.app",
+      "redirect_uris": [
+        "http://127.0.0.1:8484/oauth/callback"
+      ],
+      "client_type": "public",
+      "token_endpoint_auth_method": "none"
+    }
+  ]
+}

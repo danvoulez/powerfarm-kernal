@@ -1,0 +1,25 @@
+project_id = "powerfarm-kernel"
+
+[auth]
+enabled = true
+site_url = "https://app.powerfarm.app"
+additional_redirect_urls = [
+  "https://app.powerfarm.app/auth/callback",
+  "https://app.powerfarm.app/oauth/consent",
+]
+
+[auth.passkey]
+enabled = true
+
+[auth.webauthn]
+rp_display_name = "Powerfarm"
+rp_id = "powerfarm.app"
+rp_origins = [
+  "https://powerfarm.app",
+  "https://app.powerfarm.app",
+]
+
+[auth.oauth_server]
+enabled = true
+authorization_url_path = "/oauth/consent"
+allow_dynamic_registration = false

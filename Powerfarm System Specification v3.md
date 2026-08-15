@@ -1,6 +1,6 @@
-# Powerfarm System Specification — v3
+# Powerfarm System Specification — v3.2
 
-**Status:** Revision 3.1 — canonicalization switched from CBOR to **JCS (RFC 8785)** with a Genesis-bound golden vector suite. Revision 3 hardened against the second review: commit order is now honest (causal ancestry is constitutional; linearization is a projection), authorization declares the graph cut it saw (closing the TOCTOU gap), external effects have their own phase protocol, constitutional change is limited to amendment-protocol-or-fork, hashing is domain-separated, and time is split into three distinct notions with a temporal-anchoring hook. Revision 2 incorporated the first review: Context formally defined, Command lifecycle fully represented as Acts, content addressing forbids embedding, Identity authentication and key rotation specified, Registry and Rule definitions versioned and referenced by Acts, review semantics Act-complete, projectors registered deterministic objects, confidentiality separated from history, external-event Acts typed as observations, and a constitutional core entrenched.
+**Status:** Revision 3.2 — ratifies the first supported operational profile: one macOS LAB running direct launchd agents, Supabase Cloud as managed Postgres/Auth/Storage, and a dedicated outbound-only Cloudflare Tunnel for `powerfarm.app`. Docker, Compose, containers, and Google Cloud services are outside this profile. Installation, update, and removal are governed by a versioned, idempotent, receipt-producing pack with hosted CI and attested releases. Revision 3.1 switched canonicalization from CBOR to **JCS (RFC 8785)** with a Genesis-bound golden vector suite. Revision 3 hardened causal ordering, authorization cuts, external-effect phases, constitutional change, domain-separated hashing, and temporal honesty. Revision 2 formalized Context, Command lifecycle Acts, reference-by-hash, Identity authentication and key rotation, versioned governance, review semantics, deterministic projectors, confidentiality, external observations, and the constitutional core.
 
 ## 0. Definition
 
@@ -242,6 +242,15 @@ RotateKey → Rules → KeyRotated Act
 
 The `KeyRotated` Act supersedes prior keys (optionally with a grace window declared in the Act) and adds new ones. The set of currently valid keys is a projection over the Identity's key history. Thus authentication remains reconstructible at any historical cut, and Identity remains stable across rotation.
 
+In the ratified operational profile (§19), interactive human authentication
+MUST use managed Supabase Auth with passkeys for the WebAuthn relying party
+`powerfarm.app`. Supabase MAY issue browser sessions and OAuth 2.1 grants, but a
+platform session is only authentication evidence. It MUST be linked to a stable
+Powerfarm Identity and MUST NOT itself confer authority to commit an Act.
+Authorization remains a cut-aware Kernel decision over Identity, Rules,
+Context, and explicit proofs. OAuth clients are declared and dynamic client
+registration is disabled in the first profile.
+
 ---
 
 ## 6. Command
@@ -420,6 +429,7 @@ Canonicalization is versioned and bound at Genesis (`canonicalization_version`, 
 
 **The canonical form is JCS — RFC 8785 JSON Canonicalization Scheme.** Consequences:
 
+- JCS is the sole canonical encoding for Powerfarm objects in this specification. CBOR / RFC 8949, MessagePack, ordinary `json.dumps(sort_keys=True)`, and ad hoc "stable JSON" are not interchangeable and are non-conforming for object identity.
 - Field ordering is locale-independent lexicographic by UTF-16 code unit; number formatting follows the ECMAScript `Number::toString` algorithm; Unicode is preserved exactly as provided (no normalization — the `unicode` vector is constitutional proof).
 - Any conforming JSON tooling — including every browser's `JSON.stringify` plus a JCS shim — can verify a Powerfarm hash without a codec dependency. The verifier needs only UTF-8 and SHA-256.
 - Binary payloads are carried as base64url strings inside JSON; they are hashed as their encoded form, never as raw bytes.
@@ -719,6 +729,146 @@ Organization = Identity + Relations + Rules
 Scheduler    = Identity + Time + Command
 ```
 
+### 19.1 Ratified Operational Profile
+
+The first supported Powerfarm deployment profile is fixed as:
+
+```
+Clients / Agents
+      ↓ HTTPS
+Cloudflare DNS + dedicated Tunnel
+      ↓ outbound-only connector
+one macOS LAB
+      ↓ private Postgres connection
+Supabase Cloud
+```
+
+This profile is an implementation and operations decision, not a new Genesis
+primitive. Moving the runtime later does not fork the Powerfarm universe as long
+as content identity, the single commit gate, history, and all conformance laws
+remain intact.
+
+For this profile:
+
+- compute MUST run directly on macOS in a Python virtual environment;
+- the worker MUST run as the `com.powerfarm.worker` launchd user agent;
+- `cloudflared` MUST run as the independent `com.powerfarm.tunnel` launchd user
+  agent;
+- stable release discovery MUST run as the independent
+  `com.powerfarm.updater` launchd user agent;
+- Docker, Docker Compose, containers, container images, and container
+  orchestrators MUST NOT be required or shipped;
+- Google open-source software MAY be used, but Google Cloud services MUST NOT be
+  required;
+- Supabase Cloud Postgres is the durable store for Objects, Acts, Relations,
+  Registry, Identities, keys, and rebuildable projection substrates;
+- Cloudflare owns authoritative DNS ingress for `powerfarm.app`; the LAB uses one
+  dedicated named Tunnel, makes only outbound connections, and opens no inbound
+  router port;
+- `api.powerfarm.app` is the public commit/API hostname; additional hostnames are
+  explicit routes and MUST fail closed when no ingress rule matches.
+
+### 19.2 Database and Credential Boundary
+
+Only the Mac LAB worker may receive the private Postgres connection string used
+for runtime ledger access. Agents, browsers, public clients, and Cloudflare MUST
+NOT receive database credentials or a direct write capability over Kernel tables.
+
+Consequential writes MUST pass through the worker's Commit Gate and one atomic
+database transaction. Supabase Auth, Data API, Realtime, and Storage are platform
+surfaces around the Kernel; none is an alternative Act write path.
+
+Kernel tables MUST use explicit least-privilege Postgres grants and RLS as
+defense in depth. `anon` and `authenticated` MUST have no direct write privilege
+over Objects, Acts, Relations, Registry, Identities, or identity keys. The Data
+API SHOULD omit Kernel-internal tables from its exposed schemas. A Supabase
+secret or service-role credential MUST never appear in a public client.
+Backend credentials, the GitHub App private key, and webhook secrets MUST be
+stored in the macOS Keychain or an equivalently protected local secret store;
+they MUST NOT be embedded in the versioned pack or its environment example.
+
+### 19.3 Versioned Idempotent Operational Pack
+
+The supported deployment artifact is a versioned macOS pack containing at least:
+
+```
+install  update  uninstall  doctor  smoke  check-update
+```
+
+The pack is a convergence mechanism. Given the same pack version, source commit,
+declared configuration, and supported toolchain, repeating `install` or `update`
+MUST converge to the same operational configuration without duplicating tunnels,
+DNS routes, launchd jobs, schema objects, or ledger facts.
+
+The lifecycle contract is:
+
+- `install` creates or reuses the LAB directories and Python environment, applies
+  database migrations, creates or reuses the dedicated Tunnel and DNS routes,
+  installs/reloads the worker, tunnel, and updater launchd agents, verifies
+  health, and writes a receipt;
+- `update` performs the same convergence for a declared version transition and
+  is safe to repeat after interruption;
+- `uninstall` stops and removes generated local services and configuration while
+  preserving database history, LAB data, and receipts by default;
+- destructive purge requires an explicit option, an exact validated target, and
+  MUST NOT affect Supabase history or Cloudflare resources unless separately and
+  explicitly requested;
+- `doctor` validates prerequisites and installed state without changing them;
+- `smoke` verifies the local worker plus the declared Tunnel ingress without
+  creating a governed fact.
+
+Every successful install, update, or uninstall MUST write a receipt containing
+at least the pack version, source commit, action, hostname, and timestamp. A
+receipt MUST NOT contain secrets. A failed or partial convergence MUST NOT write
+a success receipt; rerunning the same operation must either complete convergence
+or fail loud with the unmet invariant.
+
+Dependencies and toolchain assumptions MUST be versioned or pinned sufficiently
+to reproduce an installed build. Secrets belong in a private installed env file
+or managed secret store, never in source control, Acts, logs, or receipts.
+
+An update package MUST be content-addressed, carry a canonical manifest, and be
+published with a checksum and verifiable build provenance. The LAB MUST verify
+both checksum and provenance before extraction. Activation MUST use a versioned
+release directory and an atomic current-version pointer. A durable copy MAY be
+mirrored to private Supabase Storage, but package availability never grants the
+package authority over the ledger.
+
+### 19.4 Migration Contract
+
+Database migrations are versioned operational artifacts. Install and update MUST
+apply them in deterministic filename order with fail-fast transaction semantics.
+Every shipped migration MUST be safe to re-run against the state it declares,
+must preserve existing ledger history, and MUST NOT require a database reset.
+
+Schema convergence does not authorize semantic history edits. Migrations may add
+constraints, indexes, projections, functions, permissions, and new registered
+vocabulary, but MUST NOT rewrite or delete existing Acts. Applied migration state
+and pack version SHOULD be queryable remotely as well as recorded in local
+receipts.
+
+### 19.5 CI/CD and Integration Identity
+
+For the ratified solo-developer profile, pull requests and `main` MUST be checked
+by hosted CI before a release. Required checks MUST cover Kernel conformance,
+JCS golden vectors, typing/linting, SQL parsing, immutable migration history,
+two consecutive migration applications on a clean supported PostgreSQL,
+database privilege invariants, shell validation, and byte-identical package
+reproduction.
+
+The LAB MUST NOT execute untrusted pull-request builds. A release is eligible
+for automatic LAB convergence only when its tag resolves to `main`, all declared
+version fields agree, its artifact checksum matches, and its build attestation
+verifies. Updating is pull-based and repeatable; a webhook is an optimization,
+not a source of release authority.
+
+Repository automation MUST use a narrowly permissioned GitHub App. Its webhook
+MUST be authenticated, bounded in size, event-allowlisted, and deduplicated
+before entering an operational inbox. GitHub identity and Supabase OAuth client
+identity are distinct integration boundaries. Neither a GitHub webhook nor a
+GitHub App credential is a Powerfarm authorization decision or a second ledger
+write path.
+
 ---
 
 ## 20. Confidentiality and History
@@ -890,9 +1040,22 @@ A conforming Powerfarm System MUST satisfy at least:
 
 ---
 
-## 27. Changelog from v2 to v3 (incl. 3.1)
+## 27. Changelog from v2 to v3 (incl. 3.2)
 
-0. **(3.1) Canonicalization switched to JCS / RFC 8785** — golden vectors (`values`, `arrays`, `unicode`, `french`, `weird`, `structures`) bound at Genesis; browsers become first-class verifiers; binary payloads base64url; exact quantities avoid floats.
+### Revision 3.2
+
+1. **Operational profile ratified** — one direct macOS LAB, Supabase Cloud Postgres, and a dedicated outbound-only Cloudflare Tunnel serving `powerfarm.app`; Docker, Compose, containers, and Google Cloud services are excluded (§19.1).
+2. **Database boundary fixed** — only the worker receives Postgres credentials; agents and public clients have no direct Kernel write path; explicit grants and RLS provide defense in depth (§19.2).
+3. **Reproducible operations defined** — versioned idempotent install/update/uninstall plus doctor/smoke, receipts without secrets, data-preserving uninstall, explicit purge, and fail-loud convergence (§19.3).
+4. **Migration contract defined** — deterministic, re-runnable, non-resetting migrations preserve immutable history and record applied operational state (§19.4).
+5. **Human authentication profile fixed** — Supabase-managed passkeys and OAuth 2.1 authenticate platform principals without replacing stable Powerfarm Identity or Kernel authorization (§5.1).
+6. **Delivery and integration identity fixed** — hosted conformance CI, reproducible attested releases, pull-based LAB updates, and a narrowly permissioned GitHub App form one automated path without becoming a second ledger writer (§19.5).
+
+### Revision 3.1
+
+1. **Canonicalization switched to JCS / RFC 8785** — golden vectors (`values`, `arrays`, `unicode`, `french`, `weird`, `structures`) bound at Genesis; browsers become first-class verifiers; binary payloads base64url; exact quantities avoid floats.
+
+### Revision 3.0
 
 1. **Commit order made honest (review point 1).** Ancestry DAG is constitutional; `seq` demoted to operational cursor with gaps; linearization is a projection. PF-12 rewritten.
 2. **Referential and occurrence integrity (point 2).** `acts.hash` unique; Act hash = unique historical identity; resubmission idempotent (PF-23).

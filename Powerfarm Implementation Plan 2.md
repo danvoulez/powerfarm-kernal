@@ -25,6 +25,7 @@ CLOUDFLARE DNS + DEDICATED TUNNEL
 macOS LAB
   - com.powerfarm.worker  (launchd)
   - com.powerfarm.tunnel  (launchd)
+  - com.powerfarm.updater (launchd)
   - Python venv under POWERFARM_HOME
   - versioned install receipts
        |
@@ -32,8 +33,9 @@ macOS LAB
        v
 SUPABASE CLOUD
   - Postgres: objects, acts, relations, registry, identities, keys
-  - Auth boundary tables
-  - Realtime / Storage later as projections and blob surfaces
+  - Auth: passkeys, sessions, OAuth 2.1 authorization server
+  - private Storage: remote ledger and durable update packages
+  - projection, ADK, and trajectory query substrates
 ```
 
 **The constitutional split:** agents propose, the local worker exposes the commit
@@ -54,6 +56,9 @@ Causal ancestry is the source of truth.
 | Local runtime | macOS launchd | Native Mac LAB operation with automatic restart and no container layer |
 | Public ingress | Cloudflare DNS + dedicated locally-managed Tunnel | No inbound router ports; `api.powerfarm.app` reaches local `pf-worker` |
 | Install/update | `deploy/macos` scripts | Idempotent convergence, versioned receipts, smoke/doctor checks |
+| Human authentication | Supabase Auth passkeys | Managed WebAuthn for RP ID `powerfarm.app`; platform authentication remains separate from Kernel authorization |
+| Automation identity | GitHub App | Narrow webhook and repository permissions without a long-lived personal token on the LAB |
+| CI/CD | GitHub Actions + artifact attestations | Hosted checks/builds; the LAB only pulls, verifies, and converges signed releases |
 | Agent runtime | Google ADK later | Agent proposes Commands only; no database write path |
 
 Deliberately rejected: Docker, Docker Compose, Caddy, VPS container deployment,
@@ -77,14 +82,16 @@ powerfarm-kernel/
 ├── supabase/migrations/     # idempotent schema package
 ├── agent/                   # Command proposal helpers now; ADK later
 ├── worker/                  # launchd-run local worker
-├── bootstrap/v0/            # Kimi institutional bootstrap artifact
 ├── conformance/             # golden vectors + kernel invariants
-├── deploy/macos/            # install/update/uninstall/doctor/smoke
+├── deploy/macos/            # lifecycle, updater, Auth, Keychain, GitHub App
+├── .github/workflows/       # hosted CI and attested release pipeline
+├── .github/rulesets/        # versioned main protection contract
+├── scripts/ci/              # SQL, migration, and package checks
 └── tests/
 ```
 
-The Kimi `bootstrap/v0` package is preserved as a ceremony artifact. It is not
-the production Act write path and does not replace the JCS/domain-tagged kernel.
+`genesis/genesis.yaml` and `genesis/ceremony.py` define the only Genesis path.
+There is no alternate bootstrap ledger or legacy canonicalization path.
 
 ---
 
@@ -118,10 +125,15 @@ Migrations must remain idempotent so install and update can converge safely.
 | Script | Contract |
 |---|---|
 | `install.sh` | Create/reuse LAB dirs, Python venv, Supabase schema, Cloudflare tunnel/DNS, launchd plists, receipt |
-| `update.sh` | Re-run convergence after git pull; safe to repeat |
+| `update.sh` | Converge an already verified versioned package; safe to repeat |
 | `uninstall.sh` | Stop launchd jobs and remove generated config; preserve data unless `--purge` |
 | `doctor.sh` | Check required local tools and installed files |
 | `smoke.sh` | Verify local worker health and Cloudflare ingress rules |
+| `check-update.sh` | Poll latest stable release, verify checksum and attestation, then invoke `update.sh` |
+| `configure-auth.sh` | Converge managed Supabase Auth settings from `supabase/config.toml` |
+| `ensure-oauth-clients.sh` | Create/update declared OAuth clients by stable client name |
+| `configure-github.sh` | Converge the protected-main ruleset and repository security settings |
+| `register-github-app.sh` | Create a GitHub App through the Manifest flow and store its credentials in Keychain |
 
 Receipts are written under `POWERFARM_HOME/receipts` with pack version, git
 commit, action, hostname, and timestamp. Secrets are never written to receipts.
@@ -153,6 +165,14 @@ The pack requires `DATABASE_URL` and applies migrations directly. It does not
 store a service role key in public clients and does not grant direct browser
 write access to kernel tables. RLS remains defense in depth; consequential writes
 must pass through the commit gate.
+
+Supabase Auth is configured from `supabase/config.toml`: passkeys are enabled for
+RP ID `powerfarm.app`, allowed origins are explicit, the OAuth 2.1 authorization
+server is enabled, and dynamic client registration is disabled. OAuth clients
+are declarative in `supabase/oauth-clients.json`. Management tokens, backend
+secret keys, GitHub App credentials, and webhook secrets live in the macOS
+Keychain. Supabase user/session identity is linked to a Powerfarm Identity at the
+boundary and never substitutes for a cut-aware authorization decision.
 
 ---
 
@@ -203,8 +223,7 @@ surface made from:
 - auth boundary/projection tables such as `identity_links`, `oauth_applications`,
   and `authorization_proofs`.
 
-The Kimi `bootstrap/v0` JSONL ledgers stay as a ceremony artifact. They are not
-the production ledger and do not define the database write path.
+The Postgres ledger above is the sole persisted history surface.
 
 ### 10.2 Migrations Already Present
 
@@ -218,22 +237,27 @@ It is a psql-pack baseline, not a remote database reset. If the project later
 switches to Supabase CLI migration history as the deploy source of truth, first
 reconcile remote history with `supabase migration squash` / `repair`.
 
-### 10.3 Migrations Still Needed
+### 10.3 Packaged Migrations After the Baseline
 
-Add these in order. Names below are descriptive; timestamp prefixes are assigned
-when the migration is created.
+These files are present and must execute in timestamp order. Each file is one
+transaction and the complete sequence has been verified by applying it twice to
+a fresh PostgreSQL 15 database. The target Supabase project runs PostgreSQL 17.
 
-| Migration | Purpose | Notes |
+| Migration | Status | Purpose |
 |---|---|---|
-| `registry_seed.sql` | Seed minimum command, act, relation, context, rule, and projector type definitions | Must be re-runnable with `insert ... on conflict do nothing`; born-at references the Genesis closed Act |
-| `identity_key_lookup.sql` | Add indexes/views needed to find currently valid keys at a history cut | Keep as projection/helper only; stable identity remains Act-derived |
-| `commit_gate_rpc.sql` | Add one database function for atomic object+act insertion | Function must validate append-only assumptions, uniqueness, parent existence, payload existence, registry refs, and idempotent command replay |
-| `ledger_integrity_checks.sql` | Add constraints/triggers for ancestry shape and JSON hash-array sanity | Full acyclic proof may remain in adapter/conformance until recursive SQL is worth the weight |
-| `projection_metadata.sql` | Add generic projection metadata, graph materialization, checkpoint, and rebuild-run tables | No domain projections yet; just the reusable stamp/invalidator surface |
-| `adk_integration_substrate.sql` | Add non-authoritative ADK event/workflow/tool/artifact staging tables | Stores ADK envelopes as JSONB with stable hashes; Powerfarm Acts remain truth |
-| `trajectory_projection_substrate.sql` | Add trajectory selector, run, node, edge, feature, and annotation projection tables | Supports trajectory engineering as rebuildable graph projections over Acts/Relations |
-| `rls_grants_final.sql` | Finalize role permissions for `anon`, `authenticated`, local service role, and RPC execution | Browser roles get no direct kernel table writes |
-| `migration_receipts.sql` | Optional pack receipt table recording applied pack version/git commit | Mirrors local `POWERFARM_HOME/receipts`; useful for remote audit |
+| `20260815123236_registry_seed.sql` | implemented | Operational Genesis manifest for command, Act, relation, context, rule, and projector definitions; entries become authoritative only when admitted into the Registry by Acts |
+| `20260815123237_identity_key_lookup.sql` | implemented | Cut-aware identity-key lookup and open-key projection view |
+| `20260815123238_ledger_integrity_checks.sql` | implemented | Hash-array validation, Act insert checks, immutable ledger triggers, indexes, and deferred legacy constraints |
+| `20260815123239_commit_gate_rpc.sql` | implemented | Private atomic CAS-plus-Act commit function with replay, history-cut, Registry, parent, identity, Context, and Rule checks |
+| `20260815123240_projection_metadata.sql` | implemented | Projection runs/checkpoints plus generic materialized graph nodes and edges |
+| `20260815123241_adk_integration_substrate.sql` | implemented | Non-authoritative ADK event, workflow-node, tool-call, and artifact staging |
+| `20260815123243_trajectory_projection_substrate.sql` | implemented | Selector, run, node, edge, feature, and annotation projections for trajectory engineering |
+| `20260815123244_storage_artifacts.sql` | implemented | Content-addressed metadata for remote ledger segments and durable update packages; no direct writes to `storage.*` |
+| `20260815123245_rls_grants_final.sql` | implemented | Deny-by-default Data API grants and worker-only RLS policies/capabilities |
+| `20260815123246_migration_receipts.sql` | implemented | Immutable remote receipts for install, update, and uninstall convergence |
+
+The SQL files are the normative physical schema. The logical sketches below
+explain intent and may omit operational columns, checks, and indexes.
 
 Do not add domain ledgers such as farms, billing, jobs, or notifications until
 the generic commit path is live. Those are projections or later Acts.
@@ -403,7 +427,9 @@ workflow graph; Events carry workflow metadata such as `node_info` and `output`;
 callbacks are the safe capture points; long-running tools model pause/resume and
 HITL; MCP/A2A expose external tool and agent boundaries.
 
-Powerfarm should prepare for ADK without depending on ADK as truth.
+Powerfarm should prepare for ADK without depending on ADK as truth. The
+implemented schema uses `(workflow_hash, node_id)` as the stable workflow-node
+identity and links tool calls and artifacts to that pair.
 
 Minimum tables for `adk_integration_substrate.sql`:
 
@@ -468,6 +494,10 @@ Rules:
 Trajectory engineering needs a first-class projection substrate because it asks
 questions over paths, branches, evidence, retries, alternatives, simulations,
 and outcomes. It should operate over the graph without mutating history.
+
+The implemented schema gives every run an immutable selector and input-cut
+stamp, orders nodes explicitly, constrains edge endpoints to nodes in the same
+run, and versions computed features.
 
 Minimum tables for `trajectory_projection_substrate.sql`:
 
@@ -551,22 +581,74 @@ Rules:
 This gives us the substrate for trajectory engineering without needing a full
 domain ontology on day one.
 
-### 10.10 Immediate Implementation Order
+### 10.10 Supabase Storage Contract
 
-1. Add `worker/postgres_store.py` and tests against a temporary Postgres or a
-   transaction-rolled Supabase connection.
-2. Add `commit_gate_rpc.sql` only if we need database-side enforcement beyond
-   constraints/triggers; otherwise keep the single writer in Python worker plus
-   table permissions.
-3. Replace `/commit` 501 with request parsing, canonical decoding, authorization
-   call, and `CommitGate(PostgresStore(...)).commit(...)`.
-4. Add a smoke path that inserts a payload object, submits a signed Command,
-   verifies Act hash, then repeats the same request and gets the same Act.
-5. Add `projection_metadata.sql` before any domain projection.
-6. Add `adk_integration_substrate.sql` before introducing ADK runtime state.
-7. Add `trajectory_projection_substrate.sql` before implementing trajectory
-   scoring, fold analysis, or simulated/crafted path work.
-8. Add `rls_grants_final.sql` after the exact worker database role is chosen.
+Postgres remains the transactional source of truth. Supabase Storage supplies
+two private, durable object surfaces:
+
+- `powerfarm-ledger`: content-addressed remote ledger segments and snapshots;
+- `powerfarm-packages`: signed/versioned macOS update packages and manifests.
+
+The installer creates or reuses both buckets through the Supabase Storage API.
+SQL never inserts into or mutates `storage.*`. Postgres stores checksums, paths,
+sizes, cuts, versions, and source Acts in `remote_ledger_segments` and
+`update_packages`. Runtime upload/download uses a backend-only Supabase secret;
+browser clients receive neither that secret nor direct kernel-table grants.
+
+### 10.11 Immediate Implementation Order
+
+1. **Implemented:** installer checksums and records each SQL file in
+   `powerfarm_schema_migrations`, skipping identical versions and rejecting a
+   changed checksum.
+2. **Implemented:** install/update create or reuse the two private Storage buckets through
+   the Storage API and emit a local plus remote pack receipt.
+3. **Next:** add `worker/postgres_store.py` as the sole runtime adapter and call the
+   private database commit gate through a pooled connection.
+4. Replace `/commit` 501 with parsing, JCS verification, authorization, and the
+   `PostgresStore` commit path.
+5. Add an end-to-end smoke path that repeats the same signed Command and proves
+   idempotent replay of the same Act.
+6. Implement projection rebuild/checkpoint workers before domain query APIs.
+7. Add ADK ingestion and trajectory scoring only through their non-authoritative
+   staging/projection tables.
 
 This is enough to make the ledger real without founding a religion around every
 future domain.
+
+### 10.12 CI/CD, Release, and Integration Identity
+
+The delivery path is deliberately asymmetric:
+
+```
+pull request -> hosted GitHub CI -> protected main -> v* tag
+             -> deterministic package + GitHub attestation + Release
+             -> com.powerfarm.updater polls -> verifies -> converges LAB
+```
+
+The Mac LAB is not a self-hosted build runner and does not rebuild arbitrary
+pushes. GitHub-hosted CI checks untrusted changes; only a tagged package whose
+commit belongs to `main`, whose SHA-256 matches, and whose GitHub artifact
+attestation verifies may reach `update.sh`. The updater stages versions under
+`POWERFARM_HOME/releases/<version>` and atomically changes the `current`
+symlink only after verification. The package is then mirrored by content hash
+to private `powerfarm-packages` Storage and recorded in `update_packages`.
+
+Required CI contexts are:
+
+- `quality`: ruff, mypy, pytest, JCS/conformance and SQL static checks;
+- `migrations`: PostgreSQL 17 applies all migrations twice, exercises the
+  installer's checksum ledger, and verifies database-role invariants;
+- `package`: shellcheck plus two byte-identical macOS package builds.
+
+Existing migration files are sealed. A pull request may add a later migration,
+but may not edit, delete, or reorder an already shipped SQL filename. Release
+tags must match `deploy/macos/VERSION`, `pyproject.toml`, and
+`deploy/macos/manifest.json`.
+
+The GitHub integration is a GitHub App, not a personal access token and not a
+Powerfarm human OAuth client. The terminal starts GitHub's Manifest flow, the
+user performs the required consent, and credentials are placed in Keychain.
+Webhook HMAC, event allowlisting, delivery deduplication, and payload limits are
+verified before an event enters the operational inbox. A webhook may request
+work, but it cannot write an Act or access Postgres; governed effects still
+require an authenticated Powerfarm Identity, Rules, and the Commit Gate.

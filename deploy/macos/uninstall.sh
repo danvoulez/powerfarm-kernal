@@ -14,12 +14,15 @@ fi
 require_macos
 load_env
 
+launchd_unload_updater
 launchd_unload_tunnel
 launchd_unload_worker
 run rm -f "$PF_WORKER_PLIST"
 run rm -f "$PF_TUNNEL_PLIST"
+run rm -f "$PF_UPDATER_PLIST"
 run rm -f "$PF_CLOUDFLARED_CONFIG"
 run rm -f "$PF_WORKER_RUNNER"
+run rm -f "$PF_UPDATER_RUNNER"
 
 if [ "$PF_PURGE" = "1" ]; then
   run rm -rf "$POWERFARM_HOME"

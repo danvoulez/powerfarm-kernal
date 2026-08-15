@@ -1,5 +1,5 @@
-specification: powerfarm-system-v3
-canonicalization: rfc8949-deterministic-v1
+specification: powerfarm-system-v3.2
+canonicalization: rfc8785-jcs-v1
 hash: sha256
 domain_namespace: powerfarm
 commit_gate: kernel.commit.CommitGate
@@ -17,4 +17,3 @@ genesis_order:
   - RootIdentityCreated
   - RootAuthorityGranted
   - GenesisClosed
-
