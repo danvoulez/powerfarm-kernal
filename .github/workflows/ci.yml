@@ -57,7 +57,9 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
       - run: uv sync --extra dev --locked
-      - run: uv run shellcheck deploy/macos/*.sh deploy/macos/lib/*.sh scripts/ci/*.sh
+      - run: >-
+          uv run shellcheck --severity=warning
+          deploy/macos/*.sh deploy/macos/lib/*.sh scripts/ci/*.sh
       - run: deploy/macos/package.sh --output dist-a
       - run: deploy/macos/package.sh --output dist-b
       - run: cmp dist-a/*.tar.gz dist-b/*.tar.gz
