@@ -1,3 +1,4 @@
+import base64
 from dataclasses import dataclass
 
 import pytest
@@ -34,7 +35,7 @@ def setup_case() -> tuple[MemoryStore, Identity, object, Context, object]:
     store.put_object(payload_hash, canonicalize(payload), "payload")
     private = Ed25519PrivateKey.generate()
     public = private.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
-    identity = Identity(object_hash("identity", public), "human", public)
+    identity = Identity(object_hash("identity", base64.urlsafe_b64encode(public).decode()), "human", public)
     command = propose_command("CreateThing", identity.hash, payload_hash, (genesis,), "n-1", private)
     context = Context({"request.origin": "test"}, {"request.origin": "origin-v1"})
     decision = authorize(identity, command, context, store.history_cut(), frozenset({genesis}), (Allow(),))

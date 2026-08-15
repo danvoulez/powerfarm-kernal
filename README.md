@@ -3,7 +3,8 @@
 This repository implements the constitutional core described by **Powerfarm System
 Specification v3** and the accompanying implementation plan. The current foundation includes:
 
-- deterministic RFC 8949 CBOR and SHA-256 domain-separated content identities;
+- deterministic JCS (RFC 8785) and SHA-256 domain-separated content identities,
+  pinned byte-exact by the golden vector suite in conformance/golden-vectors/;
 - frozen Identity, Command, Context, Decision, Act, and Relation values;
 - pure, fail-closed rule evaluation with declared context inputs;
 - one signature-verifying, cut-aware, idempotent Act commit gate;

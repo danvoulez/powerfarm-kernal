@@ -7,7 +7,7 @@ name = "powerfarm-kernel"
 version = "0.1.0"
 description = "A small constitutional kernel for governed, append-only history"
 requires-python = ">=3.12"
-dependencies = ["cryptography>=43"]
+dependencies = ["cryptography>=43", "rfc8785>=0.1"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "mypy>=1.11", "ruff>=0.7"]
@@ -24,4 +24,3 @@ line-length = 100
 [tool.mypy]
 strict = true
 packages = ["kernel", "genesis", "worker", "agent"]
-

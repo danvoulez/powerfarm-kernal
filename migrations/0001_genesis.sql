@@ -53,6 +53,9 @@ create table identity_keys (
   primary key (identity_hash, pubkey, valid_from_act)
 );
 
+create index acts_identity_idx on acts (identity_hash);
+create index acts_parents_gin on acts using gin (parents);
+
 create function reject_act_mutation() returns trigger language plpgsql as $$
 begin raise exception 'Powerfarm Acts are append-only'; end $$;
 create trigger acts_are_immutable before update or delete on acts
@@ -63,4 +66,3 @@ revoke insert, update, delete, truncate on objects, acts, relations, registry,
   identities, identity_keys from public;
 
 commit;
-
