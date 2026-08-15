@@ -13,8 +13,9 @@ class MemoryStore:
         self.registry: set[tuple[str, str, str]] = set()
 
     def history_cut(self) -> frozenset[str]:
-        children = {parent for act in self.acts.values() for parent in act.parents}
-        return frozenset(set(self.acts) - children)
+        # A cut is closed under ancestry (spec v3 section 10.2): the full known
+        # history is trivially closed, unlike the old frontier-only computation.
+        return frozenset(self.acts)
 
     def registered(self, kind: str, name: str, cut: frozenset[str]) -> bool:
         return any(k == kind and n == name and born in cut for k, n, born in self.registry)
@@ -43,4 +44,3 @@ class MemoryStore:
     def get_act_for_command(self, command_hash: str) -> Act | None:
         act_hash = self.command_index.get(command_hash)
         return self.acts.get(act_hash) if act_hash else None
-

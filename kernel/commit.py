@@ -45,7 +45,7 @@ class CommitGate:
         if decision.outcome is not DecisionKind.ALLOW:
             raise CommitError(f"consequential commit requires allow, got {decision.outcome}")
         current_cut = self._store.history_cut()
-        if current_cut != decision.cut and not decision.allow_cut_drift:
+        if current_cut != decision.cut:
             raise CommitError("history advanced after authorization; reauthorization required")
         if not self._store.registered("command_type", command.command_type, decision.registry_cut):
             raise CommitError("unregistered command type")
@@ -70,4 +70,3 @@ class CommitGate:
             # A transactional Store rolls the object insertion back with this failure.
             raise CommitError("store rejected Act") from error
         return replace(act)
-

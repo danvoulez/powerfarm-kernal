@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Mapping
 
 from .canon import CanonValue, object_hash
 
@@ -40,7 +40,9 @@ class Context:
 
     @property
     def hash(self) -> str:
-        return object_hash("context", dict(self.values))
+        return object_hash(
+            "context", {"types": dict(self.types), "values": dict(self.values)}
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,7 +70,6 @@ class Decision:
     rule_hashes: tuple[str, ...]
     registry_cut: frozenset[str]
     reason: str
-    allow_cut_drift: bool = False
 
 
 @dataclass(frozen=True, slots=True)
