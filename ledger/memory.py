@@ -101,6 +101,15 @@ class MemoryLedger(MemoryStore):
             return None
         return self.principal_bindings.get((issuer, subject))
 
+    def link_principal(self, *, issuer: str, subject: str, identity_hash: str,
+                       linked_act: str) -> None:
+        del linked_act
+        self.principal_bindings[(issuer, subject)] = identity_hash
+
+    def revoke_principal(self, *, issuer: str, subject: str, unlinked_act: str) -> None:
+        del unlinked_act
+        self.unlink_principal(issuer, subject)
+
     def unlink_principal(self, issuer: str, subject: str) -> None:
         """Revocation: the binding stops resolving. History keeps the Act."""
         self.principal_bindings.pop((issuer, subject), None)

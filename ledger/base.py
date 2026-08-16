@@ -28,7 +28,15 @@ class RegistryEntry:
     definition: CanonValue
 
 
-class Ledger(Store, Protocol):
+class BindingProjection(Protocol):
+    """Writes for the principal-binding projection (section 14, disposable)."""
+
+    def link_principal(self, *, issuer: str, subject: str, identity_hash: str,
+                       linked_act: str) -> None: ...
+    def revoke_principal(self, *, issuer: str, subject: str, unlinked_act: str) -> None: ...
+
+
+class Ledger(Store, BindingProjection, Protocol):
     """Narrow persistence contract; the Kernel itself remains stateless."""
 
     def get_object(self, object_hash: str) -> ObjectRecord | None: ...
