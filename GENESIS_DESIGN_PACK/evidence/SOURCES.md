@@ -9,9 +9,8 @@ active tree keeps only evidence with a current claim to support.
 | Item | Value |
 |---|---|
 | Branch at consolidation | `identity/principal-binding-acts` |
-| Last committed milestone | `edf74ae` — deterministic M2 Genesis material |
 | Migrations | 18 SQL files, sealed; additions only |
-| Registry candidate | 102 definitions, generated from executable content |
+| Registry candidate | 112 definitions, generated from executable content |
 | Genesis state | candidate only; readiness gate blocked |
 
 ## Institutional documents

@@ -32,15 +32,16 @@ constitutional definition.
 
 ### D-Director-03 — Recovery from total loss of Director keys
 
-Three designs, each with a real cost:
+Three designs, each with a real cost. The executable candidate uses fork-only because there is one
+human and the Constitution may not manufacture a quorum:
 
 | Option | Cost |
 |---|---|
-| Genesis-born constitutional quorum *(recommended)* | requires designating those Identities at Genesis |
+| separately constituted recovery design | requires real independent authority and Identities at Genesis |
 | dormant Root retained for recovery | leaves a permanent superuser, which the whole design exists to avoid |
 | fork-only | honest and spec-legitimate (§4.2), but unforgiving |
 
-*Blocks:* Part VI.3; who else needs keys at Genesis.
+*Blocks:* ratification of Part VI.3; no fictitious reviewer key material is requested.
 
 ### A-9 — Is the organization Identity Genesis-born?
 
@@ -54,16 +55,19 @@ and its jurisdiction-specific instances ordinary.
 
 ### Key material
 
-Real Ed25519 keypairs for Root, Dan-as-Director, and any constitutional reviewers. **This pack
+Real Ed25519 keypairs for Root, Dan-as-Director, and the Genesis-born organization Identity. **This pack
 cannot supply them and must not pretend to.** Generating them is an act with custody consequences
 and belongs to Dan.
 
 *Blocks:* the ceremony itself.
 
-### Quorum sizes and windows (carried as A-8)
+### Constitutional Advisor service readiness
 
-Amendment quorum, succession quorum, delay windows, and **who the constitutional reviewers are**.
-The recommended defaults (2-of-3, 30 days) are placeholders chosen for concreteness, not analysis.
+A-8 is settled: one accountable human, a mandatory non-binding opinion, and no fictitious quorum.
+The office and protocol are Genesis-bound; the particular premium model and bootstrap service are
+operational profiles. Before the first amendment or succession, the bootstrap operator must make
+the service available and record selection/inference receipts. Later, an explicit transfer Act
+moves that duty to Powerfarm's internal inference-infrastructure function.
 
 ---
 
@@ -74,7 +78,6 @@ The recommended defaults (2-of-3, 30 days) are placeholders chosen for concreten
 | **A-11** | public commitments ratified by default or by explicit act | explicit act |
 | **A-12** | does Powerfarm publish the authorization chain to counterparties | disclosure-profile question, Phase 8 |
 | **D-Director-04** | `max_holders` | 2, so handover never passes through zero |
-| **D-Director-05** | Director's role in amendment | propose-only |
 | **D-Director-06** | mandate boundary: single object or decomposed | single |
 | **D-Director-07** | delegation depth default | 0 |
 | **R-1** | drop `SubmitCommand` | drop |

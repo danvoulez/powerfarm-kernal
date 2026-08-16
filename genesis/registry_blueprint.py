@@ -138,6 +138,33 @@ def _command_definitions(choices: Mapping[str, CanonValue]) -> list[Definition]:
             "approval_act_hashes": _array(HASH, minimum=1),
             "delay_satisfied_at_cut": hashes,
         }),
+        "RequestConstitutionalOpinion": _object({
+            "subject_hash": HASH,
+            "question": STRING,
+            "evidence_hashes": _array(HASH, minimum=1),
+            "selection_policy_hash": HASH,
+        }),
+        "IssueConstitutionalOpinion": _object({
+            "request_act_hash": HASH,
+            "conclusion": {"type": "string", "enum": [
+                "support", "oppose", "qualified", "unavailable",
+            ]},
+            "rationale_hash": HASH,
+            "model_profile_hash": HASH,
+            "selection_receipt_hash": HASH,
+            "inference_receipt_hash": HASH,
+            "system_instruction_hash": HASH,
+            "input_hash": HASH,
+            "output_hash": HASH,
+            "infrastructure_profile_hash": HASH,
+        }),
+        "TransferAdvisoryInfrastructure": _object({
+            "office_hash": HASH,
+            "from_infrastructure_profile_hash": HASH,
+            "to_infrastructure_profile_hash": HASH,
+            "effective_at_cut": hashes,
+            "reason": STRING,
+        }),
         "ProposeExternalEffect": _object({
             "effect_kind_hash": HASH,
             "on_behalf_of": HASH,
@@ -198,6 +225,9 @@ def _act_definitions(commands: Mapping[str, Definition]) -> list[Definition]:
         "AmendmentProposed": "ProposeAmendment",
         "AmendmentObjected": "ObjectToAmendment",
         "AmendmentEnacted": "EnactAmendment",
+        "ConstitutionalOpinionRequested": "RequestConstitutionalOpinion",
+        "ConstitutionalOpinionIssued": "IssueConstitutionalOpinion",
+        "AdvisoryInfrastructureTransferred": "TransferAdvisoryInfrastructure",
         "ExternalEffectRequested": "ProposeExternalEffect",
         "ExternalEffectDispatched": "DispatchExternalEffect",
         "ExternalFactClaimed": "ClaimExternalFact",
@@ -277,6 +307,18 @@ def _context_definitions() -> list[Definition]:
             "proposal_act": HASH, "approvals": _array(HASH), "objections": _array(HASH),
             "proposed_at_cut": _array(HASH),
         }),
+        "advisory.constitutional_opinion": _object({
+            "request_act": HASH,
+            "opinion_act": HASH,
+            "subject_hash": HASH,
+            "conclusion": {"type": "string", "enum": [
+                "support", "oppose", "qualified", "unavailable",
+            ]},
+            "model_profile_hash": HASH,
+            "selection_policy_hash": HASH,
+            "inference_receipt_hash": HASH,
+            "infrastructure_profile_hash": HASH,
+        }),
         "cut.declared": _object({"cut": _array(HASH)}),
         "cut.advance": _object({
             "advanced": BOOLEAN, "delta": _array(HASH), "delta_act_types": _array(HASH),
@@ -303,12 +345,15 @@ def _rule_definitions(
              "drift_rejection_act_type": "CommandDenied"},
         ),
         "amendment-or-fork": (
-            context_refs("authority.grants", "amendment.state"),
+            context_refs("authority.grants", "amendment.state",
+                         "advisory.constitutional_opinion"),
             [commands[name] for name in ("ProposeAmendment", "ObjectToAmendment", "EnactAmendment")],
             {"language": "powerfarm-rule-expr-v1",
-             "require": ["target_not_eternity_clause", "delay_elapsed", "quorum_satisfied"]},
+             "require": ["target_not_eternity_clause", "delay_elapsed",
+                         "single_human_ratification", "advisory_opinion_substantive"]},
             {"mode": choices["amendment_mode"], "delay_days": choices["amendment_delay_days"],
-             "quorum": choices["constitutional_quorum"],
+             "human_approval_count": choices["constitutional_human_approval_count"],
+             "advisory_opinion_required": True, "advisory_opinion_binding": False,
              "director_role": choices["director_amendment_role"]},
         ),
         "root-mandate": (
@@ -325,19 +370,22 @@ def _rule_definitions(
             {"delegation_depth_default": choices["delegation_depth_default"]},
         ),
         "director-succession": (
-            context_refs("authority.grants", "review.acts"),
+            context_refs("authority.grants", "advisory.constitutional_opinion"),
             [commands[name] for name in ("NominateDirector", "GrantAuthority", "RevokeAuthority")],
             {"language": "powerfarm-rule-expr-v1",
-             "require": ["sitting_director_nomination", "review_quorum", "delay_elapsed",
+             "require": ["sitting_director_nomination", "single_human_ratification",
+                         "advisory_opinion_substantive", "delay_elapsed",
                          "holder_bounds_preserved"]},
-            {"quorum": choices["succession_quorum"],
+            {"human_approval_count": choices["succession_human_approval_count"],
+             "advisory_opinion_required": True, "advisory_opinion_binding": False,
              "delay_days": choices["succession_delay_days"]},
         ),
         "no-self-extension": (
             context_refs("authority.grants"),
             [commands[name] for name in ("GrantAuthority", "RegisterDefinition", "ProposeAmendment")],
             {"language": "powerfarm-rule-expr-v1",
-             "deny_if": ["power_set_grows", "delegation_depth_grows", "self_reviewers_appointed"]}, {},
+             "deny_if": ["power_set_grows", "delegation_depth_grows",
+                         "required_advisory_record_controlled"]}, {},
         ),
         "dual-authority": (
             context_refs("authority.grants", "external.authority_evidence"),
@@ -350,6 +398,14 @@ def _rule_definitions(
             {"language": "powerfarm-rule-expr-v1",
              "deny_if": ["research_compass_used_as_grant", "direction_used_as_authority"]},
             {"scope": "all_rule_evaluations"},
+        ),
+        "advisory-opinion-confers-no-authority": (
+            context_refs("advisory.constitutional_opinion"), all_commands,
+            {"language": "powerfarm-rule-expr-v1",
+             "deny_if": ["opinion_used_as_authorization", "model_used_as_office_holder",
+                         "infrastructure_operator_used_as_constitutional_authority"]},
+            {"opinion_is_mandatory_for": ["constitutional_amendment", "director_succession"],
+             "opinion_is_binding": False, "human_authority_count": 1},
         ),
     }
     return [{
@@ -365,7 +421,7 @@ def _mandate_definitions(choices: Mapping[str, CanonValue]) -> list[Definition]:
             "powers": ["ordinary_registry", "operational_authority", "budgets", "research",
                        "publication", "external_representation"],
             "prohibitions": ["constitutional_enactment", "grant_root", "self_extension",
-                             "appoint_own_reviewers"],
+                             "control_required_advisory_record"],
             "delegation_depth": choices["delegation_depth_default"],
             "external_predicates_ref": None,
             "boundary_shape": choices["mandate_boundary"],
@@ -379,19 +435,50 @@ def _mandate_definitions(choices: Mapping[str, CanonValue]) -> list[Definition]:
             "external_predicates_ref": None,
             "exhausted_at": "GenesisClosed",
         },
+        {
+            "kind": "mandate", "name": "constitutional.advisor.mandate.v1", "version": 1,
+            "powers": ["request_model_analysis", "issue_constitutional_opinion",
+                       "record_inference_provenance", "monitor_advisory_service"],
+            "prohibitions": ["authorize", "enact_amendment", "grant_authority",
+                             "hold_human_office", "dispatch_external_effect", "spend",
+                             "suppress_or_rewrite_opinion"],
+            "delegation_depth": 0,
+            "external_predicates_ref": None,
+            "advisory_only": True,
+        },
     ]
 
 
 def _office_definitions(
-    rules: Mapping[str, str], mandates: Mapping[str, str], choices: Mapping[str, CanonValue]
+    rules: Mapping[str, str], mandates: Mapping[str, str], acts: Mapping[str, str],
+    choices: Mapping[str, CanonValue]
 ) -> list[Definition]:
     recovery_rule = rules["director-succession"] \
-        if choices["recovery_mode"] == "constitutional_quorum" else None
+        if choices["recovery_mode"] == "director_succession" else None
     return [{
         "kind": "office", "name": "powerfarm.director", "version": 1,
         "mandate_kinds": [mandates["director.mandate.boundary.v1"]],
         "min_holders": 1, "max_holders": choices["max_holders"],
         "succession_rule": rules["director-succession"], "recovery_rule": recovery_rule,
+    }, {
+        "kind": "office", "name": "powerfarm.constitutional_advisor", "version": 1,
+        "mandate_kinds": [mandates["constitutional.advisor.mandate.v1"]],
+        "min_holders": 0, "max_holders": 1,
+        "succession_rule": None, "recovery_rule": None,
+        "permanent": True, "advisory_only": True,
+        "selection_policy": {
+            "class": "current_premium_frontier_model",
+            "availability": "stable_generally_available_at_invocation",
+            "exact_model_profile_pinned_per_opinion": True,
+            "provider_neutral": True,
+        },
+        "infrastructure_transition": {
+            "initial_mode": "bootstrap_managed",
+            "transfer_act_type_hash": acts["AdvisoryInfrastructureTransferred"],
+            "successor_function": "powerfarm.inference_infrastructure",
+            "operator_controls_content": False,
+            "operator_gains_constitutional_authority": False,
+        },
     }]
 
 
@@ -425,8 +512,8 @@ def build_definitions(choices: Mapping[str, CanonValue]) -> list[Definition]:
     rule_hashes = {str(item["name"]): object_hash("registry", item) for item in rules}
     mandates = _mandate_definitions(choices)
     mandate_hashes = {str(item["name"]): object_hash("registry", item) for item in mandates}
-    offices = _office_definitions(rule_hashes, mandate_hashes, choices)
     act_hashes = {str(item["name"]): object_hash("registry", item) for item in acts}
+    offices = _office_definitions(rule_hashes, mandate_hashes, act_hashes, choices)
     projectors = _projector_definitions(act_hashes)
     definitions = commands + acts + relations + contexts + rules + mandates + offices + projectors
     return sorted(definitions, key=lambda item: (str(item["kind"]), str(item["name"]), 1))

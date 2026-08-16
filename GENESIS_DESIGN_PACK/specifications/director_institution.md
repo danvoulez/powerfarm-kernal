@@ -93,7 +93,7 @@ A consequence worth stating early, because it drives several later answers:
   this, authority fans out uncontrollably and revocation becomes unprovable.
 - Nominating a successor
 - Revoking another Director's grant
-- Appointing reviewers whose remit is to review Director actions
+- Selecting, suppressing, or rewriting the required Constitutional Advisor record
 
 ### 2.4 Forbidden to the office entirely
 
@@ -105,13 +105,14 @@ A consequence worth stating early, because it drives several later answers:
 ### 2.5 The self-extension invariant
 
 > **D-Director-01.** No exercise of Director authority may increase the powers of the Director
-> office, extend delegation depth beyond the mandate's declared maximum, or appoint the reviewers
-> of its own actions. Any Command whose effect is to enlarge the mandate must route through the
-> constitutional amendment protocol, where the Director may propose but is never sufficient to
-> enact.
+> office, extend delegation depth beyond the mandate's declared maximum, or control a required
+> advisory record about its own actions. Any Command whose effect is to enlarge the mandate must
+> route through the constitutional amendment protocol, where proposal is distinct from the single
+> accountable human's ratification.
 
-This is enforceable with existing primitives: §9 already supplies `requester != reviewer`, N-of-M,
-and capability predicates without new Kernel machinery.
+The permanent Constitutional Advisor supplies mandatory, attributable analysis and no vote. The
+exact premium frontier model is selected by policy and pinned per opinion; the human decision
+remains the authorization.
 
 ---
 
@@ -123,7 +124,7 @@ Resolving the freeze problem properly. Three layers, governed differently:
 |---|---|---|---|
 | **Office existence** | "There is an office, Director" | Constitutional, Genesis-born | Amendment or fork |
 | **Mandate boundary** | "Director may register ordinary vocabulary, appoint operational authority, approve budgets; may not amend the constitution, grant Root, or self-extend" | Constitutional, Genesis-born | Amendment or fork |
-| **Mandate detail** | which namespaces, which ceilings, delegation depth, reviewer quorum sizes | Ordinary registered Rules + a versioned policy object | Governed Act, no fork |
+| **Mandate detail** | which namespaces, which ceilings, delegation depth, operational review policy | Ordinary registered Rules + a versioned policy object | Governed Act, no fork |
 | **Holder** | Dan | Governed history (Genesis-born initial holder, then succession Acts) | Ordinary succession |
 
 So `DirectorMandate.v1` splits: the **boundary** is constitutional and stable; the **policy** it
@@ -182,14 +183,15 @@ A Genesis-born constitutional Rule, **not** dependent on Root:
 
 ```
 Sitting Director nominates            -> DirectorNominated
-   + N-of-M constitutional reviewers approve  (§9: requester != reviewer)
+   + permanent Constitutional Advisor opinion is admitted
+   + the accountable human ratifies
    + declared delay window elapses
    -> AuthorityGranted (successor admitted, overlap begins)
    -> AuthorityRevoked (predecessor's grant closed)
 ```
 
-The delay window and reviewer quorum are constitutional parameters; who the reviewers are is
-ordinary.
+The delay window, one-human ratification and required non-binding advisory record are
+constitutional. Model, provider and infrastructure profiles are governed replaceable instruments.
 
 ### 5.3 The loss case — the one genuinely hard problem
 
@@ -198,14 +200,13 @@ and this is a real decision rather than a detail:
 
 | Option | Mechanism | Cost |
 |---|---|---|
-| **R1** Root retained as recovery office | Root's mandate keeps exactly one power: admit a replacement Director, gated by reviewer quorum + long delay | Root never fully spent; a dormant superuser exists forever |
-| **R2** Constitutional recovery quorum | A Genesis-born body (reviewers, not Directors) may admit a replacement under quorum + delay | No permanent superuser; requires designating those identities at Genesis |
+| **R1** Root retained as recovery office | Root's mandate keeps exactly one power: admit a replacement Director after long delay and advisory opinion | Root never fully spent; a dormant superuser exists forever |
+| **R2** Separately constituted recovery design | Real independent authority may admit a replacement under explicit Genesis-born rules | Requires actual additional humans or a lawful institution; none exists today |
 | **R3** Fork | Total loss is terminal; recovery is a new Genesis linked by `forked_from` | Brutally honest, spec-legitimate (§4.2), preserves history but not continuity |
 
-**Recommendation: R2.** It preserves disjointness (the recovery body cannot operate the system,
-only repopulate the office), avoids a dormant Root, and keeps recovery inside the universe. R1's
-dormant superuser is the thing this whole design exists to avoid; R3 is a reasonable fallback if
-you would rather not designate a recovery body at Genesis.
+**Current candidate: R3.** It refuses to manufacture absent people. An operational key plus a cold
+rotation key mitigates loss without pretending that an LLM is an independent constitutional
+authority. R1 or R2 may still be chosen before Genesis.
 
 ### 5.4 Key rotation
 
@@ -235,16 +236,18 @@ relation, or rule reference a public key.*
 
 ---
 
-## 7. Oversight and capture
+## 7. Advice, oversight and capture
 
-Drawn directly from §9, needing no new primitives.
+There is one accountable human. Ordinary operational review remains ordinary policy; it must not
+be misrepresented as a constitutional body. Constitutional amendment and succession instead
+require a record from the permanent `powerfarm.constitutional_advisor` office.
 
-- **Ordinary reviewers** are appointed by the Director. Fine — they review operational work.
-- **Reviewers of Director actions must not be appointed solely by the Director.** Otherwise
-  oversight is captured and the four-eyes structure is theatre. These are established at Genesis
-  or appointed under a Rule requiring non-Director participation.
-- **Constitutional reviewers** (the amendment and recovery quorum) are Genesis-born and outside
-  Director appointment entirely.
+The chair uses the current premium frontier model selected by governed capability policy. It is
+mandatory, attributable and non-binding. The Director cannot select, suppress or rewrite the
+required record; equally, the model and its operator cannot authorize, vote or veto. Bootstrap
+infrastructure remains effective until an explicit transfer Act places routing, monitoring,
+availability, receipts, security and cost under Powerfarm's internal inference-infrastructure
+function.
 
 ---
 
@@ -288,9 +291,9 @@ Derived from the institution above rather than from a checklist.
 - The mandate **boundary** (enumerated powers and prohibitions, including the self-extension
   invariant)
 - `min_holders` / `max_holders`
-- The succession rule (nomination + quorum + delay), independent of Root
+- The succession rule (nomination + advisory opinion + one-human ratification + delay), independent of Root
 - The recovery design (R1/R2/R3)
-- The constitutional reviewer body, if R2
+- The permanent Constitutional Advisor office, non-authority Rule, selection class and infrastructure-transfer boundary
 - **Dan's Identity + keys, as initial Director**
 
 **Deliberately left ordinary:** mandate detail and policy, all operational vocabulary, ordinary

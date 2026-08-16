@@ -16,7 +16,7 @@ Status vocabulary:
 | **SUPERSEDED** | replaced; retained so the ID never silently changes meaning |
 | **RESERVED** | never assigned; do not reuse |
 
-Last updated 2026-08-16 against commit `b3de7c7`.
+Last updated 2026-08-16.
 
 ---
 
@@ -43,11 +43,11 @@ Last updated 2026-08-16 against commit `b3de7c7`.
 
 | ID | Decision | Status |
 |---|---|---|
-| **D-Director-01** | No exercise of an office's authority may enlarge that office's powers, extend delegation depth beyond the declared maximum, or appoint the reviewers of its own actions. | ACCEPTED |
+| **D-Director-01** | No exercise of an office's authority may enlarge that office's powers, extend delegation depth beyond the declared maximum, or control a constitutionally required advisory record about its own actions. | ACCEPTED |
 | **D-Director-02** | Root and Director hold **disjoint** mandates, not nested ones. Root constitutes; Director operates. Root's mandate is exhausted at `GenesisClosed`. After Genesis, Root identity resolves from admitted history, never from configuration. | ACCEPTED |
-| **D-Director-03** | Recovery from total loss of Director keys: Genesis-born constitutional quorum *(recommended)* / dormant Root / fork-only. | **OPEN** |
+| **D-Director-03** | Recovery from total loss of Director keys: fork-only *(current honest candidate; no absent humans invented)* / dormant Root / a separately constituted recovery design. | **OPEN** |
 | **D-Director-04** | `max_holders`: 2 *(recommended, so handover never passes through zero)* / 1 / N. `min_holders = 1`; zero is forbidden. | **OPEN** |
-| **D-Director-05** | Director's role in constitutional amendment: propose-only *(recommended)* / one vote among N / excluded. | **OPEN** |
+| **D-Director-05** | Proposal is not ratification. The single accountable human ratifies after the permanent Constitutional Advisor has issued a mandatory, non-binding opinion. | **ACCEPTED** |
 | **D-Director-06** | Mandate boundary as a single constitutional object *(recommended)* / decomposed per power class. | **OPEN** |
 | **D-Director-07** | Delegation depth default: 0 *(recommended — delegates may not re-delegate)* / 1 with expiry / parameterised. | **OPEN** |
 | **D-Director-08** | Is Dan's Identity also the Root Identity? Separate Identities with separately-held keys *(recommended)*. **If shared, Root/Director disjointness is a promise rather than a structure.** | **OPEN** |
@@ -63,16 +63,26 @@ pack means two things.
 |---|---|---|---|
 | `A-1` | D-Director-03 | recovery from total Director key loss | **OPEN** |
 | `A-2` | D-Director-04 | `max_holders = 2`, `min_holders = 1` | **OPEN** |
-| `A-3` | D-Director-05 | Director may propose amendments, never enact alone | **OPEN** |
+| `A-3` | D-Director-05 | proposal is distinct from the single accountable human's ratification | **ACCEPTED** |
 | `A-4` | D-Director-06 | mandate boundary is a single constitutional object | **OPEN** |
 | `A-5` | D-Director-07 | delegation depth default 0 | **OPEN** |
 | `A-6` | D-Director-08 | Dan's Identity is Director only; Root is separate | **OPEN** |
 | `A-7` | D-Genesis-01 | structural laws and constitutional Rules separately enumerated | ACCEPTED |
-| **`A-8`** | — | amendment delay 30 days; constitutional quorum 2-of-3; **and who the reviewers are**. The numbers are placeholders chosen for concreteness, not analysis | **OPEN** |
+| **`A-8`** | — | amendment delay 30 days; one accountable human ratification; mandatory non-binding opinion from the permanent Constitutional Advisor; no model vote or reviewer quorum | **ACCEPTED** |
 | **`A-9`** | — | the organization Identity is Genesis-born, symmetric with Root and Director — avoiding a window in which Powerfarm can act but cannot be a party | RECOMMENDED |
 | **`A-10`** | — | the external-authority **interface** is constitutional; jurisdiction-specific **instances** are ordinary and deferred until incorporation and counsel exist. *(Demoted from halt to deferred instantiation — this is why Genesis may precede incorporation.)* | ACCEPTED |
 | **`A-11`** | — | public commitments enter history by explicit act, never by default. Not every statement at a conference should become an institutional obligation | RECOMMENDED |
 | **`A-12`** | — | counterparty-verifiable authorization proof is a disclosure-profile question (Phase 8), not a constitutional one | RECOMMENDED |
+
+## Constitutional — permanent advisory chair
+
+| ID | Decision | Status |
+|---|---|---|
+| **D-Advisor-01** | `powerfarm.constitutional_advisor` is a permanent advisory office. Its opinion is required for constitutional amendment and Director succession but is non-binding; it has no vote, grant, veto, external-effect or spending authority. | **ACCEPTED** |
+| **D-Advisor-02** | The chair uses the current premium frontier model selected by governed capability policy: latest stable, generally available premium model satisfying the profile at invocation. Provider and model name are replaceable; exact revision, profile and selection receipt are pinned per opinion. | **ACCEPTED** |
+| **D-Advisor-03** | Bootstrap-managed infrastructure remains effective until an admitted `AdvisoryInfrastructureTransferred` Act transfers operational custody to `powerfarm.inference_infrastructure`. The chair and its non-authority boundary survive the transfer. | **ACCEPTED** |
+| **D-Advisor-04** | The future internal inference-infrastructure function owns routing, monitoring, availability, receipts, security and cost for the chair. It may not select a result for political convenience, suppress or rewrite an opinion, or acquire constitutional authority. | **ACCEPTED** |
+| **D-Advisor-05** | Every opinion binds request/evidence, rationale, exact model/profile, selection policy and receipt, system instruction, input/output, inference receipt, infrastructure profile and claimed time. A contrary human decision must preserve the opinion and explicit human rationale. | **ACCEPTED** |
 
 ## Transaction and admission
 

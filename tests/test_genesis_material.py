@@ -30,16 +30,16 @@ def test_candidate_registry_is_explicit_hashed_and_reproducible() -> None:
     registry = load(REGISTRY_OUTPUT)
     definitions = cast(list[dict[str, object]], registry["definitions"])
 
-    assert registry["definition_count"] == len(definitions) == 102
+    assert registry["definition_count"] == len(definitions) == 112
     assert registry["counts_by_kind"] == {
-        "act_type": 34,
-        "command_type": 18,
-        "context_type": 14,
-        "mandate": 2,
-        "office": 1,
+        "act_type": 37,
+        "command_type": 21,
+        "context_type": 15,
+        "mandate": 3,
+        "office": 2,
         "projector": 7,
         "relation_type": 18,
-        "rule": 8,
+        "rule": 9,
     }
     assert Counter(str(item["definition_hash"]) for item in definitions).most_common(1)[0][1] == 1
     for entry in definitions:
@@ -66,6 +66,17 @@ def test_frozen_registry_corrections_are_present() -> None:
     assert ("context_type", "cut.declared") in by_key
     assert ("context_type", "cut.advance") in by_key
     assert ("context_type", "decision.read_set") not in by_key
+    assert ("context_type", "advisory.constitutional_opinion") in by_key
+    advisor = by_key[("office", "powerfarm.constitutional_advisor")]
+    assert advisor["permanent"] is True
+    assert advisor["advisory_only"] is True
+    assert advisor["selection_policy"]["class"] == "current_premium_frontier_model"
+    assert advisor["infrastructure_transition"]["successor_function"] == \
+        "powerfarm.inference_infrastructure"
+    transfer_hash = by_key[("act_type", "AdvisoryInfrastructureTransferred")]
+    assert advisor["infrastructure_transition"]["transfer_act_type_hash"] == \
+        object_hash("registry", cast(dict[str, CanonValue], transfer_hash))
+    assert ("rule", "advisory-opinion-confers-no-authority") in by_key
     assert by_key[("act_type", "PrincipalLinked")]["companion"] == {
         "cardinality": "exactly_one",
         "writer": "principal_bindings",
@@ -87,7 +98,8 @@ def test_every_registry_cross_reference_resolves_inside_the_candidate() -> None:
             assert set(cast(list[str], definition["inputs"])) <= hashes
         elif kind == "office":
             assert set(cast(list[str], definition["mandate_kinds"])) <= hashes
-            assert definition["succession_rule"] in hashes
+            succession = definition["succession_rule"]
+            assert succession is None or succession in hashes
             recovery = definition["recovery_rule"]
             assert recovery is None or recovery in hashes
 
@@ -112,6 +124,7 @@ def test_candidate_is_loudly_blocked_not_mislabeled_final() -> None:
     assert "D-Genesis-04 is not RATIFIED" in blockers
     assert "Identity root is absent" in blockers
     assert "Identity director is absent" in blockers
+    assert not any("constitutional_reviewer" in blocker for blocker in blockers)
 
 
 def test_ready_gate_requires_ratification_real_public_keys_and_custody() -> None:
@@ -119,10 +132,7 @@ def test_ready_gate_requires_ratification_real_public_keys_and_custody() -> None
     source["constitution_ratified"] = True
     source["ratifications"] = {decision: "RATIFIED" for decision in RATIFICATIONS}
     identities: dict[str, object] = {}
-    for number, name in enumerate((
-        "root", "director", "organization", "constitutional_reviewer_1",
-        "constitutional_reviewer_2", "constitutional_reviewer_3",
-    ), start=1):
+    for number, name in enumerate(("root", "director", "organization"), start=1):
         # Valid, distinct 32-byte public material. Tests never create private keys.
         import base64
 

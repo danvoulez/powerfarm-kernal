@@ -1,17 +1,62 @@
 {
   "canonicalization": "rfc8785-jcs-v1",
   "counts_by_kind": {
-    "act_type": 34,
-    "command_type": 18,
-    "context_type": 14,
-    "mandate": 2,
-    "office": 1,
+    "act_type": 37,
+    "command_type": 21,
+    "context_type": 15,
+    "mandate": 3,
+    "office": 2,
     "projector": 7,
     "relation_type": 18,
-    "rule": 8
+    "rule": 9
   },
-  "definition_count": 102,
+  "definition_count": 112,
   "definitions": [
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "AdvisoryInfrastructureTransferred",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "effective_at_cut": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "from_infrastructure_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "office_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            },
+            "to_infrastructure_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "office_hash",
+            "from_infrastructure_profile_hash",
+            "to_infrastructure_profile_hash",
+            "effective_at_cut",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "74ff50ecda2b35755f925414526bbac4a0c7c9931d5f55523c3d09d9809b438a"
+    },
     {
       "constitutional": true,
       "definition": {
@@ -463,6 +508,120 @@
         "version": 1
       },
       "definition_hash": "3e949853d5b3864937cebe30210f0f4786780e1042b9990f6343aac30148a035"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ConstitutionalOpinionIssued",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "conclusion": {
+              "enum": [
+                "support",
+                "oppose",
+                "qualified",
+                "unavailable"
+              ],
+              "type": "string"
+            },
+            "inference_receipt_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "infrastructure_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "input_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "model_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "output_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "rationale_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "request_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "selection_receipt_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "system_instruction_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_act_hash",
+            "conclusion",
+            "rationale_hash",
+            "model_profile_hash",
+            "selection_receipt_hash",
+            "inference_receipt_hash",
+            "system_instruction_hash",
+            "input_hash",
+            "output_hash",
+            "infrastructure_profile_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "b86aee073ce6eef96ba2ce55dff13abee97cbc4b3d1e7a4c89b4bc36d7bcd172"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ConstitutionalOpinionRequested",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "evidence_hashes": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "question": {
+              "type": "string"
+            },
+            "selection_policy_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "subject_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "subject_hash",
+            "question",
+            "evidence_hashes",
+            "selection_policy_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "de1c7beaabe36ccddbc56adfc9551322095bf351384a32bf141ccb5461963cb5"
     },
     {
       "constitutional": true,
@@ -1539,6 +1698,79 @@
       "constitutional": true,
       "definition": {
         "kind": "command_type",
+        "name": "IssueConstitutionalOpinion",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "conclusion": {
+              "enum": [
+                "support",
+                "oppose",
+                "qualified",
+                "unavailable"
+              ],
+              "type": "string"
+            },
+            "inference_receipt_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "infrastructure_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "input_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "model_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "output_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "rationale_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "request_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "selection_receipt_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "system_instruction_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_act_hash",
+            "conclusion",
+            "rationale_hash",
+            "model_profile_hash",
+            "selection_receipt_hash",
+            "inference_receipt_hash",
+            "system_instruction_hash",
+            "input_hash",
+            "output_hash",
+            "infrastructure_profile_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "9946f56b27865358f83344d6dd45dd082d4c8628884d8be98a223a0997a60e2f"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
         "name": "LinkPrincipal",
         "payload_schema": {
           "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1789,6 +2021,47 @@
       "constitutional": true,
       "definition": {
         "kind": "command_type",
+        "name": "RequestConstitutionalOpinion",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "evidence_hashes": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "question": {
+              "type": "string"
+            },
+            "selection_policy_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "subject_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "subject_hash",
+            "question",
+            "evidence_hashes",
+            "selection_policy_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "c98bdd1e461d656409fb8c0c87f6e548c9f017fad8ec3bad28455d7db4bcead0"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
         "name": "ReviewAuthorization",
         "payload_schema": {
           "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1955,6 +2228,114 @@
         "version": 1
       },
       "definition_hash": "848991a6a7155304a0c2c285479262815321771bf9aacee4827a63cb4401d3dd"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "TransferAdvisoryInfrastructure",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "effective_at_cut": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "from_infrastructure_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "office_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            },
+            "to_infrastructure_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "office_hash",
+            "from_infrastructure_profile_hash",
+            "to_infrastructure_profile_hash",
+            "effective_at_cut",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "529e64e17bc4c21f1ce466b842e23f2e9cd4af142e58ddf2dc8a81de1691709e"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "advisory.constitutional_opinion",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "conclusion": {
+              "enum": [
+                "support",
+                "oppose",
+                "qualified",
+                "unavailable"
+              ],
+              "type": "string"
+            },
+            "inference_receipt_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "infrastructure_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "model_profile_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "opinion_act": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "request_act": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "selection_policy_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "subject_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_act",
+            "opinion_act",
+            "subject_hash",
+            "conclusion",
+            "model_profile_hash",
+            "selection_policy_hash",
+            "inference_receipt_hash",
+            "infrastructure_profile_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "bcbf7d2d4ff7f4a8a0e21aeb2e767e075ebfed179dd506c73359f8ce2562f99b"
     },
     {
       "constitutional": true,
@@ -2406,6 +2787,33 @@
     {
       "constitutional": true,
       "definition": {
+        "advisory_only": true,
+        "delegation_depth": 0,
+        "external_predicates_ref": null,
+        "kind": "mandate",
+        "name": "constitutional.advisor.mandate.v1",
+        "powers": [
+          "request_model_analysis",
+          "issue_constitutional_opinion",
+          "record_inference_provenance",
+          "monitor_advisory_service"
+        ],
+        "prohibitions": [
+          "authorize",
+          "enact_amendment",
+          "grant_authority",
+          "hold_human_office",
+          "dispatch_external_effect",
+          "spend",
+          "suppress_or_rewrite_opinion"
+        ],
+        "version": 1
+      },
+      "definition_hash": "18c407b9979fa5e61a9945142870fe2f7c6b5c685270d032432ac18267984e7b"
+    },
+    {
+      "constitutional": true,
+      "definition": {
         "boundary_shape": "single",
         "delegation_depth": 0,
         "external_predicates_ref": null,
@@ -2423,11 +2831,11 @@
           "constitutional_enactment",
           "grant_root",
           "self_extension",
-          "appoint_own_reviewers"
+          "control_required_advisory_record"
         ],
         "version": 1
       },
-      "definition_hash": "3b670d16b76431da17c0926993938774e6bc164a3a2fdd06c1faf4fd1f33e5e4"
+      "definition_hash": "d0109cf3b0a95032324700a5503620852d68c1e3ed00ca6e1641aca65e7ab0fe"
     },
     {
       "constitutional": true,
@@ -2452,20 +2860,51 @@
       "definition_hash": "a20e8defd23e4a8aa4b752ddc2a2f686bf00897a6bd0778845d0a85228121e5b"
     },
     {
+      "constitutional": true,
+      "definition": {
+        "advisory_only": true,
+        "infrastructure_transition": {
+          "initial_mode": "bootstrap_managed",
+          "operator_controls_content": false,
+          "operator_gains_constitutional_authority": false,
+          "successor_function": "powerfarm.inference_infrastructure",
+          "transfer_act_type_hash": "74ff50ecda2b35755f925414526bbac4a0c7c9931d5f55523c3d09d9809b438a"
+        },
+        "kind": "office",
+        "mandate_kinds": [
+          "18c407b9979fa5e61a9945142870fe2f7c6b5c685270d032432ac18267984e7b"
+        ],
+        "max_holders": 1,
+        "min_holders": 0,
+        "name": "powerfarm.constitutional_advisor",
+        "permanent": true,
+        "recovery_rule": null,
+        "selection_policy": {
+          "availability": "stable_generally_available_at_invocation",
+          "class": "current_premium_frontier_model",
+          "exact_model_profile_pinned_per_opinion": true,
+          "provider_neutral": true
+        },
+        "succession_rule": null,
+        "version": 1
+      },
+      "definition_hash": "71fb8d05d8f4c68eb8120d7c76eb24f29a2b29fd698bdd8cb468c88d2a33eacf"
+    },
+    {
       "constitutional": false,
       "definition": {
         "kind": "office",
         "mandate_kinds": [
-          "3b670d16b76431da17c0926993938774e6bc164a3a2fdd06c1faf4fd1f33e5e4"
+          "d0109cf3b0a95032324700a5503620852d68c1e3ed00ca6e1641aca65e7ab0fe"
         ],
         "max_holders": 2,
         "min_holders": 1,
         "name": "powerfarm.director",
-        "recovery_rule": "c890725cad15330817b7d4e0904849d26b7f78865343e0707702bed0518f03d3",
-        "succession_rule": "c890725cad15330817b7d4e0904849d26b7f78865343e0707702bed0518f03d3",
+        "recovery_rule": null,
+        "succession_rule": "4e7e481422fd37a3532b1706bea5e33d38cc65fe99db65d23b59a67dfa0be981",
         "version": 1
       },
-      "definition_hash": "945088c84f6658f9d5975c1f1f4ff285b586ba0529b74c97c0868c154f9f8218"
+      "definition_hash": "a211a197d9407fe15445a7922d4eca3e895bd1d9f852884999884425f16ac557"
     },
     {
       "constitutional": true,
@@ -2501,6 +2940,7 @@
           "65f0f51272a35afe58ff9f3b042005c4eac251816f1040f4bd8a81014653ed33",
           "6b5e7777f931693a52d7ed4630c63dfcbe147c09d552848f01b156ae993ab3db",
           "6c4e7d23ff04f8594ab29384e38a2abb3f5abe86c0c8dbc710bf167acaacaa03",
+          "74ff50ecda2b35755f925414526bbac4a0c7c9931d5f55523c3d09d9809b438a",
           "7a65d8cfceb28d37538f4a6e41bee5d3bce6a0b3f65fa83411e59ffcbb5c9c58",
           "87f4e8c7597b87d2ce71ce3d9629dd953c129217728c73e11d333c8bd49c9136",
           "8a6f6551d3939bf4f34e0015693316ef01f8349c00802d1957cae550023c09d9",
@@ -2511,12 +2951,14 @@
           "a322cf8dc52137e98795103debd98a6729af13d76944dfc62e8206c35339b9f7",
           "a6a841bea81eaf6bd2bc88795f197c5133ece5d2955fa6fb2e92dd20223df98b",
           "ad234774cadcf3d7990985ac99213eb6a48e66b58ec142bb4c69558be7bbe7a5",
+          "b86aee073ce6eef96ba2ce55dff13abee97cbc4b3d1e7a4c89b4bc36d7bcd172",
           "c56ee30116be9de2ccd278330e88732531d20915493dd492cfd217e938cb1ee5",
           "c60a534260b18a14f3ad658724e47c27f234e9342374e53ba47b05d3c6441ff5",
           "ce71b1bbdc3cec93b84e033b81af7b5d44ea9e48e9fa0057323de567864c88db",
           "d0a5b19abc9f6a80303a4c53c75c9d94229f116a9ae987cb91ce7fa212c6793c",
           "d3f732108b9043c6e1f915fb18a39f0f74adb5c5e9e544507092fbb33eac9ff9",
           "ddae61ef595690f64e3894e9e529c5e276ffa2ed9aa8962eb92d711e09e5acc2",
+          "de1c7beaabe36ccddbc56adfc9551322095bf351384a32bf141ccb5461963cb5",
           "f03f273031de0d553cab3c89d26d1955425d70a3400c1ec9c4c142bdc5115e84",
           "f14c9d8552bdab61b09b0dfbf374372b47d2f336b03788cad8222d4ac5aa7f94",
           "f611336af4a41d846a3f604011542477727b9d22949937aa9da1103bc0fb5e46"
@@ -2525,7 +2967,7 @@
         "name": "causal.topological",
         "version": 1
       },
-      "definition_hash": "6ab15af623efe331d3c729aa81f1a44ba815b600d13f99f28024daf8cff65b36"
+      "definition_hash": "7c87a059e6194252072046a1d6fffe315d91b0ca77563a7ba1464cbe13011d5a"
     },
     {
       "constitutional": true,
@@ -2605,6 +3047,7 @@
           "65f0f51272a35afe58ff9f3b042005c4eac251816f1040f4bd8a81014653ed33",
           "6b5e7777f931693a52d7ed4630c63dfcbe147c09d552848f01b156ae993ab3db",
           "6c4e7d23ff04f8594ab29384e38a2abb3f5abe86c0c8dbc710bf167acaacaa03",
+          "74ff50ecda2b35755f925414526bbac4a0c7c9931d5f55523c3d09d9809b438a",
           "7a65d8cfceb28d37538f4a6e41bee5d3bce6a0b3f65fa83411e59ffcbb5c9c58",
           "87f4e8c7597b87d2ce71ce3d9629dd953c129217728c73e11d333c8bd49c9136",
           "8a6f6551d3939bf4f34e0015693316ef01f8349c00802d1957cae550023c09d9",
@@ -2615,12 +3058,14 @@
           "a322cf8dc52137e98795103debd98a6729af13d76944dfc62e8206c35339b9f7",
           "a6a841bea81eaf6bd2bc88795f197c5133ece5d2955fa6fb2e92dd20223df98b",
           "ad234774cadcf3d7990985ac99213eb6a48e66b58ec142bb4c69558be7bbe7a5",
+          "b86aee073ce6eef96ba2ce55dff13abee97cbc4b3d1e7a4c89b4bc36d7bcd172",
           "c56ee30116be9de2ccd278330e88732531d20915493dd492cfd217e938cb1ee5",
           "c60a534260b18a14f3ad658724e47c27f234e9342374e53ba47b05d3c6441ff5",
           "ce71b1bbdc3cec93b84e033b81af7b5d44ea9e48e9fa0057323de567864c88db",
           "d0a5b19abc9f6a80303a4c53c75c9d94229f116a9ae987cb91ce7fa212c6793c",
           "d3f732108b9043c6e1f915fb18a39f0f74adb5c5e9e544507092fbb33eac9ff9",
           "ddae61ef595690f64e3894e9e529c5e276ffa2ed9aa8962eb92d711e09e5acc2",
+          "de1c7beaabe36ccddbc56adfc9551322095bf351384a32bf141ccb5461963cb5",
           "f03f273031de0d553cab3c89d26d1955425d70a3400c1ec9c4c142bdc5115e84",
           "f14c9d8552bdab61b09b0dfbf374372b47d2f336b03788cad8222d4ac5aa7f94",
           "f611336af4a41d846a3f604011542477727b9d22949937aa9da1103bc0fb5e46"
@@ -2629,7 +3074,7 @@
         "name": "trajectory.graph",
         "version": 1
       },
-      "definition_hash": "4271664ecc3d72580efdd45769bf846699392e053722ebf264d47c5671d2b16e"
+      "definition_hash": "eb1badaccb1610f51a093a3017f95a4cd24e4c17c53bb142099c8655a49e2a37"
     },
     {
       "constitutional": true,
@@ -3068,6 +3513,60 @@
       "definition": {
         "applicability": [
           "02342f21422cf7b8ce4f377b3daf4b0f29ac69784fd0c84af1e7e34ab7235aa8",
+          "1e4ed3c65a36e8f1563f93bde04d8bdd685075785617fc75cb928f68d1a66484",
+          "219c4e91abc36b6b81c0c6cdf20ca06c1ac5d0299e791566b43c7b1f58014a2b",
+          "356c73eae658be84694495808c91a20740f8d55c657f6ea11bbc114d65eb1642",
+          "3cad7db7c6e61de5095255bf3cbc46022ed131b148be88512355d2dbe77fbe3a",
+          "424358605cf1a7f7ee964867c654e6ea4dfedd0f3dcfe9cdf9afafad44cd9853",
+          "45fae5b4a71bdb17a21772319a716b702ef2ac4e3a3803d18114265ec26bd004",
+          "529e64e17bc4c21f1ce466b842e23f2e9cd4af142e58ddf2dc8a81de1691709e",
+          "6fe5ba8937bf17d3858e727250e9c0ba714320abebe185bec738b7a19e1cf574",
+          "78a34862a2c58c37ca08aeda844cb4d2c009d3ce16180e1699cd830cc4d5a5ea",
+          "7ddd3a9248388210211790c29be583a657eb8bdd8afa23a1e1cef8b1787f42ea",
+          "7ed7061f5532b8b1dc02f27c254d7676f3626184c0bbd2109376e85cbd51fb7f",
+          "848991a6a7155304a0c2c285479262815321771bf9aacee4827a63cb4401d3dd",
+          "9946f56b27865358f83344d6dd45dd082d4c8628884d8be98a223a0997a60e2f",
+          "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67",
+          "c98bdd1e461d656409fb8c0c87f6e548c9f017fad8ec3bad28455d7db4bcead0",
+          "d9bef7b6190649544b11c8c4afd888eae9cb7a0a4e831de45e8f2cdbae3b174f",
+          "db03447528cb1a6a084a2177776143b8a06fe3c73838f0557b23f81f3f02ca79",
+          "e527fc4357afa641945f3474d83cdca19bf20bd21166f60e4f223162df57ca66",
+          "ee79ac5dc675f26963990bca108454109fdc817c805346efe47c6bbd2512e4e6",
+          "f9dbe4138c1135e6d4ad2d8d317b4fac73d75cd7f9eb854d5b894b77ecee9c00"
+        ],
+        "body": {
+          "deny_if": [
+            "opinion_used_as_authorization",
+            "model_used_as_office_holder",
+            "infrastructure_operator_used_as_constitutional_authority"
+          ],
+          "language": "powerfarm-rule-expr-v1"
+        },
+        "context_keys": [
+          {
+            "definition_hash": "bcbf7d2d4ff7f4a8a0e21aeb2e767e075ebfed179dd506c73359f8ce2562f99b",
+            "name": "advisory.constitutional_opinion"
+          }
+        ],
+        "kind": "rule",
+        "name": "advisory-opinion-confers-no-authority",
+        "parameters": {
+          "human_authority_count": 1,
+          "opinion_is_binding": false,
+          "opinion_is_mandatory_for": [
+            "constitutional_amendment",
+            "director_succession"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "62fe37842bece6b2e743a77cb4117ad27383c106983d33f3d5b5f0dbbb106f4d"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "applicability": [
+          "02342f21422cf7b8ce4f377b3daf4b0f29ac69784fd0c84af1e7e34ab7235aa8",
           "f9dbe4138c1135e6d4ad2d8d317b4fac73d75cd7f9eb854d5b894b77ecee9c00",
           "ee79ac5dc675f26963990bca108454109fdc817c805346efe47c6bbd2512e4e6"
         ],
@@ -3076,7 +3575,8 @@
           "require": [
             "target_not_eternity_clause",
             "delay_elapsed",
-            "quorum_satisfied"
+            "single_human_ratification",
+            "advisory_opinion_substantive"
           ]
         },
         "context_keys": [
@@ -3087,19 +3587,25 @@
           {
             "definition_hash": "4de27f25dd94478d3905e8b95b2b6ce10243ac815c97a8bff8f45cbff89fcf5a",
             "name": "amendment.state"
+          },
+          {
+            "definition_hash": "bcbf7d2d4ff7f4a8a0e21aeb2e767e075ebfed179dd506c73359f8ce2562f99b",
+            "name": "advisory.constitutional_opinion"
           }
         ],
         "kind": "rule",
         "name": "amendment-or-fork",
         "parameters": {
+          "advisory_opinion_binding": false,
+          "advisory_opinion_required": true,
           "delay_days": 30,
           "director_role": "propose_only",
-          "mode": "in_universe",
-          "quorum": 2
+          "human_approval_count": 1,
+          "mode": "in_universe"
         },
         "version": 1
       },
-      "definition_hash": "71e8b641663a75d2627934c7dfc37dbaef41137dc38e23ae212db868af13a08b"
+      "definition_hash": "6fc9f53168b462c00bd09253094d33c093c641a8331614f8834f0196d84e5a2d"
     },
     {
       "constitutional": true,
@@ -3133,12 +3639,15 @@
           "3cad7db7c6e61de5095255bf3cbc46022ed131b148be88512355d2dbe77fbe3a",
           "424358605cf1a7f7ee964867c654e6ea4dfedd0f3dcfe9cdf9afafad44cd9853",
           "45fae5b4a71bdb17a21772319a716b702ef2ac4e3a3803d18114265ec26bd004",
+          "529e64e17bc4c21f1ce466b842e23f2e9cd4af142e58ddf2dc8a81de1691709e",
           "6fe5ba8937bf17d3858e727250e9c0ba714320abebe185bec738b7a19e1cf574",
           "78a34862a2c58c37ca08aeda844cb4d2c009d3ce16180e1699cd830cc4d5a5ea",
           "7ddd3a9248388210211790c29be583a657eb8bdd8afa23a1e1cef8b1787f42ea",
           "7ed7061f5532b8b1dc02f27c254d7676f3626184c0bbd2109376e85cbd51fb7f",
           "848991a6a7155304a0c2c285479262815321771bf9aacee4827a63cb4401d3dd",
+          "9946f56b27865358f83344d6dd45dd082d4c8628884d8be98a223a0997a60e2f",
           "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67",
+          "c98bdd1e461d656409fb8c0c87f6e548c9f017fad8ec3bad28455d7db4bcead0",
           "d9bef7b6190649544b11c8c4afd888eae9cb7a0a4e831de45e8f2cdbae3b174f",
           "db03447528cb1a6a084a2177776143b8a06fe3c73838f0557b23f81f3f02ca79",
           "e527fc4357afa641945f3474d83cdca19bf20bd21166f60e4f223162df57ca66",
@@ -3172,7 +3681,7 @@
         },
         "version": 1
       },
-      "definition_hash": "d886129b7a129f81bdfe376df592afcc7b5e4d879f2b255f34f1d981075ddfb0"
+      "definition_hash": "eab9589358696c70cdc5a040ad5f2d214f6229f9b702d13b61f25dd6f49ecf3f"
     },
     {
       "constitutional": true,
@@ -3185,12 +3694,15 @@
           "3cad7db7c6e61de5095255bf3cbc46022ed131b148be88512355d2dbe77fbe3a",
           "424358605cf1a7f7ee964867c654e6ea4dfedd0f3dcfe9cdf9afafad44cd9853",
           "45fae5b4a71bdb17a21772319a716b702ef2ac4e3a3803d18114265ec26bd004",
+          "529e64e17bc4c21f1ce466b842e23f2e9cd4af142e58ddf2dc8a81de1691709e",
           "6fe5ba8937bf17d3858e727250e9c0ba714320abebe185bec738b7a19e1cf574",
           "78a34862a2c58c37ca08aeda844cb4d2c009d3ce16180e1699cd830cc4d5a5ea",
           "7ddd3a9248388210211790c29be583a657eb8bdd8afa23a1e1cef8b1787f42ea",
           "7ed7061f5532b8b1dc02f27c254d7676f3626184c0bbd2109376e85cbd51fb7f",
           "848991a6a7155304a0c2c285479262815321771bf9aacee4827a63cb4401d3dd",
+          "9946f56b27865358f83344d6dd45dd082d4c8628884d8be98a223a0997a60e2f",
           "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67",
+          "c98bdd1e461d656409fb8c0c87f6e548c9f017fad8ec3bad28455d7db4bcead0",
           "d9bef7b6190649544b11c8c4afd888eae9cb7a0a4e831de45e8f2cdbae3b174f",
           "db03447528cb1a6a084a2177776143b8a06fe3c73838f0557b23f81f3f02ca79",
           "e527fc4357afa641945f3474d83cdca19bf20bd21166f60e4f223162df57ca66",
@@ -3226,7 +3738,7 @@
         },
         "version": 1
       },
-      "definition_hash": "68ec3b634b9a00692418819fd1c822fbdc46e0c9967f371f3126036ac5f878f9"
+      "definition_hash": "1320fc39759f13ee20783183a4df99d9c576e94ab3b8f53f0961ecb241c6554b"
     },
     {
       "constitutional": true,
@@ -3240,7 +3752,8 @@
           "language": "powerfarm-rule-expr-v1",
           "require": [
             "sitting_director_nomination",
-            "review_quorum",
+            "single_human_ratification",
+            "advisory_opinion_substantive",
             "delay_elapsed",
             "holder_bounds_preserved"
           ]
@@ -3251,19 +3764,21 @@
             "name": "authority.grants"
           },
           {
-            "definition_hash": "cad7f0c467cda129e697f5b929da4cdbc994921d0fbc0df86aa91b8b8d086c44",
-            "name": "review.acts"
+            "definition_hash": "bcbf7d2d4ff7f4a8a0e21aeb2e767e075ebfed179dd506c73359f8ce2562f99b",
+            "name": "advisory.constitutional_opinion"
           }
         ],
         "kind": "rule",
         "name": "director-succession",
         "parameters": {
+          "advisory_opinion_binding": false,
+          "advisory_opinion_required": true,
           "delay_days": 7,
-          "quorum": 2
+          "human_approval_count": 1
         },
         "version": 1
       },
-      "definition_hash": "c890725cad15330817b7d4e0904849d26b7f78865343e0707702bed0518f03d3"
+      "definition_hash": "4e7e481422fd37a3532b1706bea5e33d38cc65fe99db65d23b59a67dfa0be981"
     },
     {
       "constitutional": true,
@@ -3308,7 +3823,7 @@
           "deny_if": [
             "power_set_grows",
             "delegation_depth_grows",
-            "self_reviewers_appointed"
+            "required_advisory_record_controlled"
           ],
           "language": "powerfarm-rule-expr-v1"
         },
@@ -3323,7 +3838,7 @@
         "parameters": {},
         "version": 1
       },
-      "definition_hash": "51eae77ee708eb55dfc6da37f61765dae4b5204622c129d235115b490ce1f740"
+      "definition_hash": "1cf271d9b70117110397fe5d303078860b9272e9a5acac654fc92a84d20ab59b"
     },
     {
       "constitutional": true,
@@ -3336,12 +3851,15 @@
           "3cad7db7c6e61de5095255bf3cbc46022ed131b148be88512355d2dbe77fbe3a",
           "424358605cf1a7f7ee964867c654e6ea4dfedd0f3dcfe9cdf9afafad44cd9853",
           "45fae5b4a71bdb17a21772319a716b702ef2ac4e3a3803d18114265ec26bd004",
+          "529e64e17bc4c21f1ce466b842e23f2e9cd4af142e58ddf2dc8a81de1691709e",
           "6fe5ba8937bf17d3858e727250e9c0ba714320abebe185bec738b7a19e1cf574",
           "78a34862a2c58c37ca08aeda844cb4d2c009d3ce16180e1699cd830cc4d5a5ea",
           "7ddd3a9248388210211790c29be583a657eb8bdd8afa23a1e1cef8b1787f42ea",
           "7ed7061f5532b8b1dc02f27c254d7676f3626184c0bbd2109376e85cbd51fb7f",
           "848991a6a7155304a0c2c285479262815321771bf9aacee4827a63cb4401d3dd",
+          "9946f56b27865358f83344d6dd45dd082d4c8628884d8be98a223a0997a60e2f",
           "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67",
+          "c98bdd1e461d656409fb8c0c87f6e548c9f017fad8ec3bad28455d7db4bcead0",
           "d9bef7b6190649544b11c8c4afd888eae9cb7a0a4e831de45e8f2cdbae3b174f",
           "db03447528cb1a6a084a2177776143b8a06fe3c73838f0557b23f81f3f02ca79",
           "e527fc4357afa641945f3474d83cdca19bf20bd21166f60e4f223162df57ca66",
@@ -3373,11 +3891,11 @@
         "parameters": {},
         "version": 1
       },
-      "definition_hash": "4951ca6167cb539ffe31b8516369b2697ce0093965b8a2257bc9df9197549838"
+      "definition_hash": "91cc7bb124fc6f31a944f5c484c886bcacfcc42a67d0f9665c74ef73776fab97"
     }
   ],
   "format": "powerfarm-registry-manifest-v1",
   "hash": "sha256",
-  "manifest_hash": "b68a04a0dccd85efd431eef6e75a8e50451ae1a3e3f5b62d654d15ca9d11ba42",
+  "manifest_hash": "703a418bf1f90f619cca4329a0ab91a0d3cc22c2096390281bfefe58b104b7b1",
   "ratification_status": "candidate"
 }

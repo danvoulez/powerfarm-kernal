@@ -30,11 +30,9 @@ RATIFICATIONS = (
     "D-Genesis-04",
     "D-Director-03",
     "D-Director-04",
-    "D-Director-05",
     "D-Director-06",
     "D-Director-07",
     "D-Director-08",
-    "A-8",
     "A-9",
     "R-1",
     "R-4",
@@ -69,7 +67,13 @@ def _constitutional(definition: Definition) -> bool:
     if kind == "context_type":
         return name != "request.metadata"
     if kind == "mandate":
-        return name in {"director.mandate.boundary.v1", "root.mandate.v1"}
+        return name in {
+            "constitutional.advisor.mandate.v1",
+            "director.mandate.boundary.v1",
+            "root.mandate.v1",
+        }
+    if kind == "office":
+        return name == "powerfarm.constitutional_advisor"
     if kind == "projector":
         return name != "trajectory.graph"
     if kind == "relation_type":
@@ -123,14 +127,6 @@ def material_blockers(source: Mapping[str, object]) -> tuple[str, ...]:
     required = ["root", "director"]
     if choices.get("organization_genesis_born") is True:
         required.append("organization")
-    if choices.get("recovery_mode") == "constitutional_quorum":
-        reviewer_count = choices.get("constitutional_reviewer_count")
-        if not isinstance(reviewer_count, int) or reviewer_count < 1:
-            blockers.append("constitutional_reviewer_count must be positive")
-        else:
-            required.extend(f"constitutional_reviewer_{number}"
-                            for number in range(1, reviewer_count + 1))
-
     for identity_name in required:
         identity = identities.get(identity_name)
         if not isinstance(identity, Mapping):

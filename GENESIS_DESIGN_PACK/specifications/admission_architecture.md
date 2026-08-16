@@ -86,7 +86,9 @@ Two consequences:
 | `cut.advance` | **keep** — the advance is the subject of the decision |
 | `decision.read_set` | **drop as a context type** — derived on demand from `rule_hashes`; adding it as vocabulary would invite treating it as an input rather than a proof |
 
-Genesis returns to **102 definitions** (+2, not +3). The plumbing argument still holds — the *derivation* must exist and be exercised from day one — but it is a service capability, not a vocabulary item.
+The admission baseline returned to **102 definitions** (+2, not +3). The later constitutional
+decision to create the permanent Advisor adds its own executable vocabulary; it does not reverse
+R-23. `decision.read_set` remains derived, not supplied.
 
 ---
 
@@ -252,7 +254,7 @@ The six read-but-unwritten tables were never six bugs. They were one missing mec
 | **R-18R** | Hash-pinned Rule context semantics | **Adopted as stated.** Replaces my R-18 |
 | **R-21** | Mechanically enforced dependency declarations | **Adopted as stated**, with capability-style restriction preferred over instrumentation |
 | **R-22** | Distinct typed dispositions | **Adopted.** Requires two new Act preimage fields — §D |
-| **R-23** | Drop `decision.read_set` as a context type; derive it | **Yes** — it is a proof, not an input. Genesis returns to 102 |
+| **R-23** | Drop `decision.read_set` as a context type; derive it | **Yes** — it is a proof, not an input. The admission baseline returned to 102 before later institutional vocabulary |
 | **R-24** | Companion contract declared in the act_type definition | **Yes** — the core of §F.2 |
 | **R-25** | Revoke `commit_act`; fold it into `admit` | **Yes** — one door, enforced by grants |
 | **R-26** | Ratify the four preimage changes as one pre-Genesis item | **Yes** — §E. Highest-stakes deadline in the project |

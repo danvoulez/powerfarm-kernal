@@ -34,21 +34,21 @@ It is written to be read by a person deciding whether to live inside it.
 | Symmetric accountability stated as a constitutional clause (V.7) | It is the claim that makes the responsibility promise real, not a side effect of the design |
 | Final external phase carries **claimed** semantics | Powerfarm cannot cryptographically manufacture legal validity |
 
-## 0.3 Assumptions carried
+## 0.3 Assumptions and rulings carried
 
-Recommendations carried forward so the draft is concrete. **Each is a decision not yet made.**
-Marked `[A-n]` where they bite.
+Recommendations and accepted rulings carried forward so the draft is concrete. Unsettled items
+remain identified in Part XII. Marked `[A-n]` where they bite.
 
 | ID | Assumption | Alternative |
 |---|---|---|
-| A-1 | Recovery from total Director loss is a Genesis-born constitutional quorum | dormant Root; fork-only |
+| A-1 | Candidate recovery from total Director key loss is fork-only | dormant Root; a separately constituted recovery design |
 | A-2 | `max_holders = 2`, `min_holders = 1` | 1; N |
-| A-3 | Director may propose amendments, never enact alone | one vote among N; excluded |
+| A-3 | One accountable human ratifies; Director may propose, but proposal is not ratification | a future human succession design |
 | A-4 | Mandate boundary is a single constitutional object | decomposed per power class |
 | A-5 | Delegation depth default 0 | 1 with expiry; parameterised |
 | A-6 | **Dan's Identity is Director only; Root is a separate Identity, separately-held keys** | Dan is both |
 | A-7 | Structural laws and constitutional Rules separately enumerated | keep all four as Rules |
-| A-8 | Amendment delay 30 days; constitutional quorum 2-of-3 | any N-of-M + window |
+| A-8 | Amendment requires one accountable human ratification, a mandatory non-binding opinion from the permanent Constitutional Advisor, and a 30-day delay | fork-only |
 | A-9 | The organization Identity is Genesis-born | created by first Director act |
 | A-10 | External-authority **interface** is constitutional; **instances** are ordinary and deferred | bind a jurisdiction now |
 | A-11 | Public commitments enter history by explicit act, not by default | automatic ratification |
@@ -161,7 +161,8 @@ Part VI. **Does not reference Root** — which is what allows Root to be spent.
 ### CR-6 `no-self-extension`
 
 > No exercise of any office's authority may increase that office's powers, extend delegation depth
-> beyond the declared maximum, or appoint the reviewers of its own actions.
+> beyond the declared maximum, or control a constitutionally required advisory record about its
+> own actions.
 
 Stated generally, so it binds every office Powerfarm ever creates.
 
@@ -188,6 +189,14 @@ Powerfarm activity.
 This Rule applies across all Rule evaluations. The Research Scheme remains an ordinary governed
 object so its direction can evolve without constitutional amendment.
 
+### CR-9 `advisory-opinion-confers-no-authority`
+
+The permanent Constitutional Advisor supplies a required, attributable second analysis; it does
+not supply a second sovereign. A model opinion, model profile, provider, inference receipt, or
+infrastructure operator is never an authorization, vote, office-holder credential, or grant of
+constitutional power. The accountable human may depart from an opinion, but the contrary opinion
+and the human's explicit rationale remain in history.
+
 ---
 
 # PART IV — Root
@@ -210,7 +219,7 @@ Root may, and only before `GenesisClosed`:
 ### IV.3 Exhaustion
 
 At `GenesisClosed`, Root's mandate is spent. Root cannot appoint, remove, operate, register, grant,
-or amend. `[A-1]` Under the recovery-quorum design Root holds no recovery power either. Root keys
+or amend. `[A-1]` Under the fork-only candidate Root holds no recovery power. Root keys
 should thereafter be treated as archival evidence, not an operating credential.
 
 > **The environment variable ceases to determine anything at `GenesisClosed`.** It is legitimate
@@ -312,7 +321,8 @@ when Powerfarm's products cause harm or fail their commitments.
 **May not.** Enact a constitutional amendment alone `[A-3]`; create, alter or reinterpret any
 constitutional definition; claim Root authority or act in the constitutive layer; rewrite, delete or
 reorder history; enlarge the Director mandate (CR-6); extend delegation depth beyond the declared
-maximum; appoint the reviewers of Director actions; assert legal validity on Powerfarm's behalf
+maximum; select, suppress, or rewrite a required Constitutional Advisor opinion; assert legal
+validity on Powerfarm's behalf
 (V.5); act outside the mandate in force at the declared cut.
 
 ### V.4 Mandate detail — ordinary
@@ -387,6 +397,34 @@ responsibility.
 sitting Director to nominate, zero is a deadlock rather than a state. Two exists precisely so
 handover never passes through zero.
 
+### V.9 Permanent Constitutional Advisor
+
+There exists a permanent office `powerfarm.constitutional_advisor` with the constitutional mandate
+`constitutional.advisor.mandate.v1`. The chair is a durable institutional function; its model,
+provider, capability profile, service identity, routing and infrastructure are replaceable
+instruments. The chair never becomes a human, Director, reviewer quorum, voter or holder of Root
+authority.
+
+For every constitutional amendment and Director succession, the chair must issue an opinion before
+human ratification. The opinion is **mandatory and non-binding**. Its record binds the request and
+evidence hashes, conclusion, rationale hash, exact model and capability profile, selection-policy
+receipt, system-instruction hash, input and output hashes, inference receipt, infrastructure
+profile and claimed time. Unavailability is recorded but is **not a substantive opinion** and does
+not satisfy the constitutional precondition; it cannot be used to fabricate analysis or silently
+bypass the chair.
+
+The selection policy chooses the **current premium frontier model**: the latest stable,
+generally-available premium model satisfying the governed capability profile at invocation time.
+No provider or marketing name is constitutional. Every invocation pins the exact model revision
+and proves why it satisfied the policy, so “latest” cannot become an unrepeatable assertion.
+
+Initially the chair runs in `bootstrap_managed` mode. That configuration remains effective until
+an admitted `AdvisoryInfrastructureTransferred` Act moves operation to
+`powerfarm.inference_infrastructure`, the future Powerfarm function responsible for model routing,
+availability, monitoring, receipts, security and cost. Transfer changes operational custody only:
+the operator may neither control opinion content nor acquire constitutional authority. The chair
+survives replacement or failure of any particular model, provider or infrastructure stack.
+
 ---
 
 # PART VI — Succession, revocation, recovery
@@ -395,13 +433,15 @@ handover never passes through zero.
 
 ```
 sitting Director nominates                    -> DirectorNominated
-  + N-of-M constitutional reviewers approve   (requester != reviewer, §9)
+  + Constitutional Advisor opinion is admitted
+  + the accountable human ratifies
   + declared delay window elapses
   -> AuthorityGranted    (successor admitted; overlap begins)
   -> AuthorityRevoked    (predecessor's grant closed)
 ```
 
-Quorum and window are constitutional `[A-8]`; who the reviewers are is ordinary. **Root appears
+The single-human requirement, advisory record and window are constitutional `[A-8]`. The model is
+not a second person and the infrastructure operator is not a hidden approver. **Root appears
 nowhere** — deliberately.
 
 Representation mandates follow the office, not the person: the successor represents the same
@@ -415,14 +455,11 @@ revocations are discoverable objects.
 
 ### VI.3 Recovery — total loss of Director keys `[A-1]`
 
-A Genesis-born **constitutional recovery quorum**: named Identities, not Directors, who may admit a
-replacement Director under quorum plus extended delay. They hold no operational power and cannot
-direct the system — only repopulate the office.
-
-Three mandates, none a superset of another: *constitute*, *operate*, *restore*.
-
-Fallback if you prefer not to designate this body: total loss is terminal and recovery is a fork
-under `forked_from` — spec-legitimate (§4.2), honest, unforgiving.
+The candidate does not invent absent humans. Total loss is terminal in this universe and recovery
+requires a fork under `forked_from` — spec-legitimate (§4.2), honest, unforgiving. An operational
+key and separately held cold rotation key can reduce this risk without creating a constitutional
+quorum. Choosing a dormant Root or another recovery institution remains an open pre-Genesis
+decision; it may not be smuggled in after `GenesisClosed`.
 
 ### VI.4 Key rotation
 
@@ -438,7 +475,8 @@ Without this, the universe is fork-only forever.
 
 ```
 proposal by any mandate-holding Identity      -> AmendmentProposed
-  + 2-of-3 constitutional reviewers approve, proposer excluded   [A-8]
+  + permanent Constitutional Advisor opinion is admitted          [A-8]
+  + one accountable human explicitly ratifies                     [A-8]
   + 30-day delay window
   + no successful objection Act within the window
   -> AmendmentEnacted    (new constitutional definition version born)
@@ -448,8 +486,9 @@ proposal by any mandate-holding Identity      -> AmendmentProposed
 CR-6 self-extension; V.7 symmetric accountability; and the requirement that this protocol cannot be
 amended to remove review or delay.
 
-**The Director may propose but never enact** `[A-3]`. With CR-6, this closes the path whereby an
-office grows itself by amendment.
+Proposal is never ratification `[A-3]`. The human decision remains attributable; the advisor's
+opinion remains visible even when overridden. With CR-6 and CR-9, neither the Director office nor
+the model infrastructure can silently grow itself.
 
 ---
 
@@ -463,13 +502,15 @@ the next artifact.**
 - §17 self-government vocabulary: `GrantAuthority`/`AuthorityGranted`,
   `AppointReviewer`/`ReviewerAppointed`, `RegisterDefinition`/`DefinitionRegistered`,
   `RotateKey`/`KeyRotated` — all currently absent and required for the office to function
+- Constitutional Advisor protocol: `RequestConstitutionalOpinion`,
+  `IssueConstitutionalOpinion`, `TransferAdvisoryInfrastructure` and their mirrored Act types
 - Office and mandate kinds: `office`, `mandate` (registry `kind` has no CHECK, so no schema change)
 - Representation vocabulary: `represented_by` relation type; representation mandate objects
 - External effects phases: `Dispatched`, `Observed`, `DispatchFailed`, `EffectRetried`, and the
   claimed-external-fact type (V.5)
 - Commitment and obligation vocabulary; acceptance and disclosure act types
 - Constitutional context types: delegation and request-provenance keys
-- Constitutional Rules CR-1 … CR-7
+- Constitutional Rules CR-1 … CR-9
 
 > **Every definition inspected by a typed Rule must carry its canonical schema from birth**
 > (`payload_schema` for commands, `value_schema` for context keys). Seeding name/version shells and
@@ -490,7 +531,7 @@ the vocabulary cannot be misread as asserting validity. Flagged for your ruling 
 | Root | Root Identity | canonical content + initial public keys `[A-6]` |
 | Director | **Dan Voulez's Identity** | canonical content + initial public keys |
 | Legal person | **Powerfarm organization Identity** | canonical content `[A-9]` |
-| Constitutional reviewers | named Identities | canonical content + initial public keys `[A-1]` `[A-8]` |
+| Constitutional Advisor | permanent office and mandate; no human or model holder required at Genesis | exact definitions and bootstrap transition policy `[A-8]` |
 
 **Dan is Genesis-born Director.** The first appointment cannot be an ordinary Act for the same
 reason `RegisterDefinition` cannot register itself: it would require registered vocabulary, a Rule,
@@ -500,8 +541,9 @@ both.
 What is bound is *"Dan is the initial holder,"* not *"Dan is Director forever."* From the first
 succession onward the holder is governed history, by a path that does not run through Root.
 
-> **Required before ratification:** real Ed25519 key material for Root, Dan-as-Director, and each
-> constitutional reviewer. This draft cannot supply them and must not pretend to.
+> **Required before ratification:** real Ed25519 public key material and custody records for Root,
+> Dan-as-Director and the Genesis-born organization Identity. This draft cannot supply private
+> material and must not pretend to.
 
 ---
 
@@ -512,7 +554,9 @@ Stated explicitly, because omission is otherwise indistinguishable from oversigh
 Mandate detail and policy; **external-authority predicate instances and their jurisdictions**
 `[A-10]`; all operational vocabulary; ordinary Rules; ordinary reviewers; every holder after the
 first; additional organization Identities beyond the first; projections including `active_grants`;
-budget ceilings; disclosure profiles; node species; the Engine, the OS, and the inference gateway.
+budget ceilings; disclosure profiles; node species; the Engine and the OS. Particular models,
+providers and inference implementations are ordinary, while the permanent advisory office, its
+non-authority boundary, selection-class requirement and custody-transfer protocol are constitutional.
 
 **None of the Director machinery beyond the boundary is constitutional.** The office is durable; its
 instruments are not.
@@ -524,8 +568,8 @@ instruments are not.
 | This document | Artifact |
 |---|---|
 | Parts I, II | content-bound Genesis manifest fields + `structural_laws` list `[A-7]` |
-| Part III | eight `kind=rule` definition objects, hashes bound through the Registry manifest |
-| Parts IV–VII | `office`/`mandate` objects, CR-3/4/5/7, amendment protocol object |
+| Part III | nine `kind=rule` definition objects, hashes bound through the Registry manifest |
+| Parts IV–VII | `office`/`mandate` objects, CR-3/4/5/7/9, amendment and advisory protocol objects |
 | Part VIII | generated Registry manifest with canonical schemas and a bound manifest hash |
 | Part IX | Identity objects + initial public keys and custody records, bound by canonical content |
 
@@ -537,15 +581,14 @@ whole constitution rather than a 19-line summary of it.
 # PART XII — Open before ratification
 
 1. **A-6** — is Dan's Identity also Root? Everything about disjointness turns on it.
-2. **A-1** — recovery: quorum, dormant Root, or fork-only.
-3. **A-8** — quorum sizes, delay windows, and who the constitutional reviewers are.
-4. **Key material** for every Genesis-born holder.
-5. **A-9** — is the organization Identity Genesis-born, and which entity is the first one?
-6. **A-2, A-3, A-4, A-5, A-7, A-11, A-12** — carried defaults, each defensible, none settled.
-7. The Part VIII enumeration, and the claimed-external-fact naming ruling.
-8. **V.7 ratified with counsel.** Symmetric accountability means the record is discoverable when
+2. **A-1** — ratify fork-only recovery or choose a separately constituted alternative.
+3. **Key material** for every Genesis-born Identity.
+4. **A-9** — is the organization Identity Genesis-born, and which entity is the first one?
+5. **A-2, A-4, A-5, A-7, A-11, A-12** — carried defaults, each defensible, none settled.
+6. The Part VIII enumeration, and the claimed-external-fact naming ruling.
+7. **V.7 ratified with counsel.** Symmetric accountability means the record is discoverable when
    things go wrong. That is the price of the promise and should be accepted knowingly.
-9. Whether the institution can bear what it accepts — insurance, reserves, corporate form. Powerfarm
+8. Whether the institution can bear what it accepts — insurance, reserves, corporate form. Powerfarm
    can represent accountability perfectly and still be unable to honour it. That is a legal and
    financial design problem, not a ledger one.
 
