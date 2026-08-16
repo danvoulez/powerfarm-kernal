@@ -54,6 +54,10 @@ class ActionRequest:
     history_cut: frozenset[str] | None = None
     registry_cut: frozenset[str] | None = None
     auth_chain: tuple[str, ...] = ()
+    # The time claimed inside the Act; part of its content and its hash
+    # (section 10.3). Named `claimed_when` rather than `when` so it can never be
+    # read as causal order or as provable knowledge time.
+    claimed_when: str | None = None
 
     def command(self) -> Command:
         require_hash(self.identity_hash, "identity_hash")

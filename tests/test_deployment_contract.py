@@ -89,6 +89,11 @@ def test_migration_history_is_sealed_and_ordered() -> None:
     versions = [path.name.split("_", 1)[0] for path in migrations]
 
     assert (ROOT / "supabase/migrations/.sealed").is_file()
-    assert len(migrations) == 12
+    # Sealed history only ever grows: a later migration may be added, but the
+    # baseline and everything shipped after it may never leave. Immutability of
+    # their *contents* is enforced against origin/main by
+    # scripts/ci/check_migration_history.sh, which a count cannot express.
+    assert migrations[0].name == "20260815060311_powerfarm_baseline.sql"
+    assert len(migrations) >= 12
     assert len(versions) == len(set(versions))
     assert versions == sorted(versions)

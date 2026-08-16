@@ -299,7 +299,8 @@ class PostgresStore:
     def has_act(self, act_hash: str) -> bool: ...
     def put_object(self, object_hash: str, canon: bytes, kind: str) -> None: ...
     def append_act(self, act: Act) -> None: ...
-    def get_act_for_command(self, command_hash: str) -> Act | None: ...
+    def get_act(self, act_hash: str) -> Act | None: ...
+    def get_acts_for_command(self, command_hash: str) -> tuple[Act, ...]: ...
 ```
 
 Implementation rules:
@@ -308,7 +309,13 @@ Implementation rules:
   consequential Acts;
 - `put_object()` and `append_act()` are executed inside one transaction owned by
   `PostgresStore.commit_transaction(...)` or an equivalent context manager;
-- duplicate `command_hash` returns the existing Act, not an error;
+- idempotency is keyed on the Act's own hash, never on `command_hash`: an
+  earlier revision of this section specified `get_act_for_command()` and
+  "duplicate `command_hash` returns the existing Act", which contradicts PF-23
+  and made the §6.1 lifecycle — and this document's own Phase 4 exit test —
+  unrepresentable. `command_hash` is a trajectory index, not an identity;
+- a Command may hold many lifecycle Acts but only one *consequential* Act; the
+  Gate refuses a second one, and the service replays the settled occurrence;
 - duplicate object hash with different bytes/kind is a hard collision error;
 - parent references must exist in `acts`;
 - payload references must exist in `objects`;

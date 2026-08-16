@@ -12,7 +12,17 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from kernel.canon import canonicalize, object_hash
 from kernel.commit import CommitGate
 from kernel.rules import Rule, RuleResult, authorize
-from kernel.types import Act, Command, Context, Decision, DecisionKind, Identity
+from kernel.types import (
+    CONSEQUENTIAL_OUTCOMES,
+    LIFECYCLE_ACT_TYPES,
+    PERMITTED_OUTCOMES,
+    Act,
+    Command,
+    Context,
+    Decision,
+    DecisionKind,
+    Identity,
+)
 from ledger.base import Ledger
 
 from .errors import AuthorizationError, ConflictError, NotFoundError, ValidationError
@@ -146,29 +156,20 @@ class AuthorityService:
         self, request: ActionRequest, principal: RequestPrincipal | None = None
     ) -> tuple[EvaluatedAction, Act]:
         evaluated = self.evaluate(request, principal)
-        existing = self._ledger.get_act_for_command(evaluated.command.hash)
-        if existing is not None:
-            if (
-                existing.act_type != evaluated.act_type
-                or existing.identity_hash != evaluated.identity.hash
-                or existing.parents != evaluated.command.parents
-                or existing.context_hash != evaluated.context.hash
-                or existing.payload_hash != evaluated.command.payload_hash
-            ):
-                raise ConflictError("Command already committed with different consequential inputs")
-            replay = Decision(
-                DecisionKind.ALLOW,
-                existing.decision_cut,
-                existing.rule_hashes,
-                existing.registry_cut,
-                "idempotent replay of existing Act",
-            )
-            return replace(evaluated, decision=replay), existing
-        if evaluated.decision.outcome is not DecisionKind.ALLOW:
+        # Which outcome may produce this Act is Kernel law (kernel.types); the
+        # service only restates it to keep the protocol's typed error surface.
+        permitted = PERMITTED_OUTCOMES.get(evaluated.act_type, CONSEQUENTIAL_OUTCOMES)
+        if evaluated.decision.outcome not in permitted:
             raise AuthorizationError(
-                f"consequential commit requires allow, got {evaluated.decision.outcome.value}"
+                f"{evaluated.act_type} requires {'/'.join(sorted(permitted))}, "
+                f"got {evaluated.decision.outcome.value}"
             )
-        if evaluated.decision.cut != self._ledger.history_cut():
+        if evaluated.act_type not in LIFECYCLE_ACT_TYPES:
+            settled = self._settled_consequence(evaluated)
+            if settled is not None:
+                return settled
+        cut_before = self._ledger.history_cut()
+        if evaluated.decision.cut != cut_before:
             raise ConflictError("history advanced after evaluation; reauthorization required")
         if request.payload is not None:
             self._ledger.put_object(
@@ -181,8 +182,50 @@ class AuthorityService:
             evaluated.context,
             act_type=evaluated.act_type,
             auth_chain=evaluated.auth_chain,
+            claimed_when=request.claimed_when,
         )
+        if act.hash in cut_before:
+            # The Gate returned an occurrence that already held its place: a
+            # replay of identical content, not a second placement (PF-23).
+            replay = Decision(
+                evaluated.decision.outcome,
+                act.decision_cut,
+                act.rule_hashes,
+                act.registry_cut,
+                "idempotent replay of existing Act",
+            )
+            return replace(evaluated, decision=replay), act
         return evaluated, act
+
+    def _settled_consequence(
+        self, evaluated: EvaluatedAction
+    ) -> tuple[EvaluatedAction, Act] | None:
+        """The consequential Act this Command already produced, if any.
+
+        A re-submission at a later cut is not a new purchase of the same change.
+        The Gate refuses it outright; the protocol is friendlier and replays the
+        settled occurrence, which is what an idempotent client expects.
+        """
+        for act in self._ledger.get_acts_for_command(evaluated.command.hash):
+            if act.act_type in LIFECYCLE_ACT_TYPES:
+                continue
+            if (
+                act.act_type != evaluated.act_type
+                or act.identity_hash != evaluated.identity.hash
+                or act.parents != evaluated.command.parents
+                or act.context_hash != evaluated.context.hash
+                or act.payload_hash != evaluated.command.payload_hash
+            ):
+                raise ConflictError("Command already committed with different consequential inputs")
+            replay = Decision(
+                DecisionKind.ALLOW,
+                act.decision_cut,
+                act.rule_hashes,
+                act.registry_cut,
+                "idempotent replay of existing Act",
+            )
+            return replace(evaluated, decision=replay), act
+        return None
 
     def _validate_payload(self, request: ActionRequest) -> None:
         if request.payload is not None:

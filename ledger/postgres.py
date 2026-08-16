@@ -162,12 +162,17 @@ class PostgresStore:
             ).fetchone()
         return bool(row and row["closed"])
 
-    def get_act_for_command(self, command_hash: str) -> Act | None:
+    def get_acts_for_command(self, command_hash: str) -> tuple[Act, ...]:
+        """Every Act referencing this Command -- its whole lifecycle (PF-15).
+
+        Ordered by `seq` for stable pagination only; constitutional order is the
+        ancestry DAG (section 10.2), which the caller must respect.
+        """
         with self._pool.connection() as connection:
-            row = connection.execute(
-                "select * from public.acts where command_hash = %s", (command_hash,)
-            ).fetchone()
-        return _row_to_act(row) if row is not None else None
+            rows = connection.execute(
+                "select * from public.acts where command_hash = %s order by seq", (command_hash,)
+            ).fetchall()
+        return tuple(_row_to_act(row) for row in rows)
 
     def get_identity(self, identity_hash: str, cut: frozenset[str]) -> Identity | None:
         with self._pool.connection() as connection:

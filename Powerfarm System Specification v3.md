@@ -465,7 +465,7 @@ A *history cut* `c` is therefore defined as a **set of Act hashes closed under a
 
 Powerfarm distinguishes at least three temporal ideas, which MUST NOT be conflated:
 
-1. **`act.when`** — the time claimed inside the Act's content (part of its hash; an assertion, not a proof).
+1. **`act.claimed_when`** (`act.when` conceptually) — the time claimed inside the Act's content (part of its hash; an assertion, not a proof). Implementations MUST name this field `claimed_when` in code, APIs, and schema: a bare `when` invites reading it as causal order or as provable knowledge time, which are the two ideas this section exists to keep apart.
 2. **Causal order** — ancestry position; what the Act could have known about (§10.2).
 3. **Provable knowledge time** — when the system can *prove* an object already existed. CAS proves content identity but, alone, cannot prove that content existed at a given date.
 
