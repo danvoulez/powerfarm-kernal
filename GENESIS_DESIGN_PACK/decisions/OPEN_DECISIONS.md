@@ -17,7 +17,7 @@ both mandates, "Root is spent at `GenesisClosed`" is a promise only Dan can veri
 structure anyone can check. A separate Root key, held differently — cold, or split — is what makes
 the separation physical instead of declarative.
 
-*Blocks:* D-Genesis-03 (what `genesis.yaml` binds), key generation, Part IX of the constitution.
+*Blocks:* D-Genesis-03 (what the Genesis manifest binds), key generation, Part IX of the constitution.
 
 ### D-Genesis-04 — Does this universe get an amendment protocol?
 

@@ -21,7 +21,7 @@ from typing import Any
 import pytest
 
 REPO = Path(__file__).resolve().parent.parent
-SPEC = REPO / "Powerfarm System Specification v3.md"
+SPEC = REPO / "SPECIFICATION.md"
 MAP = Path(__file__).with_name("LAW_TEST_MAP.toml")
 
 REQUIRED_EVIDENCE = {
@@ -38,7 +38,7 @@ def load_map() -> dict[str, Any]:
 
 
 def normative_laws() -> set[str]:
-    """The laws the specification actually declares (section 26)."""
+    """The laws the current specification actually declares."""
     return set(re.findall(r"\bPF-\d{2}\b", SPEC.read_text(encoding="utf-8")))
 
 

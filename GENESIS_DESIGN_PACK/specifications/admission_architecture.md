@@ -1,6 +1,8 @@
 # Admission Architecture — the Transaction Seam
 
-Closes D-Txn-01. Incorporates R-18R, R-21, R-22.
+Closes D-Txn-01. Incorporates R-18R, R-21, R-22. Implemented by `8bfc1db`.
+Section A records the pre-M1 base that the decision corrected; it is not a claim
+about the current code.
 
 Design document. No code, migrations, or commits.
 
@@ -10,9 +12,9 @@ Design document. No code, migrations, or commits.
 
 | Claim | Verdict |
 |---|---|
-| `Context.types` is still name-based | **Confirmed** — [kernel/types.py:74](../../kernel/types.py:74): `types: Mapping[str, str]` |
+| `Context.types` is still name-based | **Confirmed in the pre-M1 base** — [kernel/types.py:74](../../kernel/types.py): `types: Mapping[str, str]` |
 | Derived keys become `"request.requested_by" → "request.requested_by"` | **Confirmed** — the service supplies the key name as its own type |
-| `commit.py` checks the key *name* against the registry | **Confirmed** — [kernel/commit.py:90-94](../../kernel/commit.py:90) calls `registered("context_type", key, registry_cut)`, which is boolean-any-version |
+| `commit.py` checks the key *name* against the registry | **Confirmed in the pre-M1 base** — [kernel/commit.py:90-94](../../kernel/commit.py) called `registered("context_type", key, registry_cut)`, which was boolean-any-version |
 
 So Context has exactly the Relation disease: meaning carried by a name, validated by name, with no version pinning. **R-18R adopted as stated** — Rule context semantics are hash-pinned; every context key a Rule reads is bound at the Rule's birth to the exact `context_type` definition hash and schema it was type-checked against, and the admitted Context records that hash. Later context-type versions cannot reinterpret a historical Rule evaluation.
 
@@ -97,7 +99,7 @@ authorization disposition   :  allow | deny | require_review
 decision-validity disposition:  VALID | REAUTHORIZE | COMMIT_REGARDLESS
 ```
 
-CR-1 is a **decision-validity Rule**, not another authorization vote. It must not be folded into `authorize()`'s `DENY > REQUIRE_REVIEW > ALLOW` collapse ([kernel/rules.py:45-50](../../kernel/rules.py:45)), and `deny` must never be made to stand in for `REAUTHORIZE`.
+CR-1 is a **decision-validity Rule**, not another authorization vote. It must not be folded into `authorize()`'s `DENY > REQUIRE_REVIEW > ALLOW` collapse ([kernel/rules.py:45-50](../../kernel/rules.py)), and `deny` must never be made to stand in for `REAUTHORIZE`.
 
 v1:
 
@@ -131,7 +133,7 @@ These have accumulated across the design and they share a property worth stating
 
 **All four are free before `GenesisClosed` and require amendment or fork afterwards.** They are not implementation TODOs that can be sequenced comfortably behind Phase 0 — they are shape decisions on content identity, and content identity is the one thing Genesis makes permanent.
 
-Recommend treating these as a single ratification item alongside `genesis.yaml`.
+Recommend treating these as a single ratification item in the content-bound Genesis material.
 
 ---
 

@@ -1,6 +1,7 @@
 # Part VIII Freeze + CR-1 `declared-decision-cut`
 
-Design document. No code, migrations, or commits.
+Decision record. The frozen preimage work landed in `c0144ab`; “not caught up”
+claims below describe the pre-M0 base that motivated the change.
 
 ---
 
@@ -13,7 +14,7 @@ Your three claims verified against source:
 | Claim | Verdict |
 |---|---|
 | Micro-Spec already binds relations by definition hash | **Confirmed** — `02_Powerfarm_Micro_Specs_v1.1.md:243-273`: `relation_type_hash`, and *"`display_relation_type` never determines meaning"*; `"lineage": true` comes from the registered definition |
-| `kernel/types.py` has not caught up | **Confirmed** — [kernel/types.py:134-143](../../kernel/types.py:134): `relation_type: str`, and the hash preimage carries `"relation_type": self.relation_type`. Implementation TODO against the Micro-Spec |
+| `kernel/types.py` had not caught up | **Confirmed in the pre-M0 base** — [kernel/types.py:134-143](../../kernel/types.py) used `relation_type: str`, and the hash preimage carried `"relation_type": self.relation_type` |
 | A four-name whitelist is visibly incomplete | **Confirmed, and worse than stated** — spec §24 names **five** lineage relations: `simulated_from, mutated_from, crafted_from, spliced_from, forked_from`. **`mutated_from` and `spliced_from` are not seeded at all.** My whitelist omitted two the specification already requires |
 
 The last point settles it independently of the argument: a whitelist that is already missing two spec-named members is not a boundary, it is an accident of what happened to be seeded.
@@ -182,8 +183,8 @@ strictness rather than requiring someone to read code.
 
 ### B.7 Relationship to the three hardcoded checks
 
-The existing checks — [service/authority.py:189](../../service/authority.py:189),
-[kernel/commit.py:77](../../kernel/commit.py:77), and the `commit_act` RPC — **remain**, as CR-1's
+The existing checks — [service/authority.py:189](../../service/authority.py),
+[kernel/commit.py:77](../../kernel/commit.py), and the admission RPC — **remain**, as CR-1's
 enforcement machinery. Two rules govern them:
 
 1. **They may never be stricter than CR-1.** If they were, the Rule would be decorative and the

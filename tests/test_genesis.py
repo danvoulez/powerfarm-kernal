@@ -17,5 +17,13 @@ def test_m2_cannot_be_mistaken_for_a_genesis_ceremony() -> None:
 def test_genesis_pins_the_definitive_canonicalization() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
 
-    assert manifest["specification"] == "powerfarm-system-v3.2"
+    assert manifest["specification"] == "powerfarm-kernel-specification-v1"
     assert manifest["canonicalization"] == "rfc8785-jcs-v1"
+    assert manifest["structural_laws"] == [
+        "append-only-acts",
+        "reference-by-hash",
+        "acyclic-ancestry",
+        "acyclic-constitutional-dependency",
+        "typed-relations",
+        "one-authoritative-admission-door",
+    ]

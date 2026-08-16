@@ -32,13 +32,44 @@ create table auth.users (id uuid primary key);
 SQL
 
 export DATABASE_URL="host=$TMP_PG port=$PORT user=postgres dbname=postgres"
-export PF_DRY_RUN=0
-# shellcheck source=../../deploy/macos/lib/common.sh
-. deploy/macos/lib/common.sh
 # Ordered migrations are applied once.  Idempotency belongs to the checksum
 # ledger: a later schema migration may intentionally make an earlier migration
 # inapplicable to the evolved schema, so replaying every historical file is not
 # a valid production operation.
+apply_supabase_migrations() {
+  local migration filename version name checksum ledger_exists existing
+  for migration in supabase/migrations/*.sql; do
+    filename="$(basename "$migration" .sql)"
+    version="${filename%%_*}"
+    name="${filename#*_}"
+    checksum="$(shasum -a 256 "$migration" | awk '{print $1}')"
+    ledger_exists="$("${PSQL[@]}" -Atc \
+      "select (to_regclass('public.powerfarm_schema_migrations') is not null)::text")"
+    existing=""
+    if [ "$ledger_exists" = "true" ]; then
+      existing="$("${PSQL[@]}" -At -v pf_version="$version" <<'SQL'
+select coalesce((select checksum_sha256 from public.powerfarm_schema_migrations where version = :'pf_version'), '');
+SQL
+)"
+    fi
+    if [ -n "$existing" ]; then
+      [ "$existing" = "$checksum" ] || {
+        printf 'migration checksum changed for %s\n' "$filename" >&2
+        return 1
+      }
+      continue
+    fi
+    "${PSQL[@]}" -f "$migration"
+    "${PSQL[@]}" -v pf_version="$version" -v pf_name="$name" \
+      -v pf_checksum="$checksum" <<'SQL'
+insert into public.powerfarm_schema_migrations(
+  version, name, checksum_sha256, pack_version, git_commit
+) values (
+  :'pf_version', :'pf_name', :'pf_checksum', 'ci', null
+) on conflict (version) do nothing;
+SQL
+  done
+}
 apply_supabase_migrations
 apply_supabase_migrations
 ledger_count="$("${PSQL[@]}" -Atc 'select count(*) from public.powerfarm_schema_migrations')"

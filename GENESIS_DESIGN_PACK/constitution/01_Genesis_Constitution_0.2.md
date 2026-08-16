@@ -2,8 +2,8 @@
 
 Integrated draft. Supersedes 0.1 and the External Representation addendum.
 
-Design document: what `genesis.yaml` and the Genesis definition objects must *say*, expressed as
-design before it is expressed as a binding.
+Design document: what the content-bound Genesis manifests and definition objects must *say*,
+expressed as design before it is expressed as a binding.
 
 **Status: draft for reaction. Not for ratification.** Nothing here has been admitted, and nothing
 should be until the decisions in Part XII are settled deliberately.
@@ -67,8 +67,9 @@ require_review`. Two of the four originally declared names fit; two do not.
 - `append-only-acts` — no Command is authorized by it; a storage property ✗
 - `reference-by-hash` — a canonicalization discipline, not a decision ✗
 
-§18 already separates these as *Structural laws*. The current `genesis.yaml` collapses the
-categories by filing all four under `constitutional_rules`; the fix is to un-collapse them.
+§18 already separates these as *Structural laws*. The retired `genesis.yaml` collapsed the
+categories by filing all four under `constitutional_rules`; the content-bound material generator
+now keeps them separate.
 
 > **D-Genesis-01 (refined).** Every name declared a *constitutional Rule* must resolve to a
 > content-addressed `kind=rule` definition born at Genesis and citable in `rule_hashes`. Structural
@@ -83,7 +84,7 @@ Satisfies §16 bindings 1–5 and §10.1.
 
 | Binding | Value |
 |---|---|
-| Specification | `powerfarm-system-v3.2` |
+| Specification | `powerfarm-kernel-specification-v1` |
 | Canonicalization | `rfc8785-jcs-v1` — JCS is the *sole* canonical encoding; CBOR, MessagePack and sorted-key JSON are non-conforming (§10.1:430-432) |
 | Hash algorithm | `sha256` |
 | Domain tag namespace | `powerfarm`, tag version `v1` (`powerfarm:act:v1`, `powerfarm:relation:v1`, …) (§10.1:440-447, PF-22) |
@@ -109,6 +110,7 @@ fork. `[A-7]`
 | **SL-3 Causal acyclicity** | Ancestry is a DAG. `seq` is an operational cursor, never constitutional order. A history cut is a set of Act hashes closed under ancestry |
 | **SL-4 Acyclic constitutional dependency** | The Genesis graph defining constitutional dependency is acyclic |
 | **SL-5 Typed relations** | Objects are connected by immutable typed Relations; relation semantics are never collapsed into an untyped parents array |
+| **SL-6 One authoritative admission door** | Every Act and every required authoritative companion row enter through one atomic admission mechanism; alternate writers are structurally unreachable |
 
 These are eternity clauses. A universe violating one is not a different Powerfarm — it is not
 Powerfarm.
@@ -174,6 +176,17 @@ Stated generally, so it binds every office Powerfarm ever creates.
 The **interface** is constitutional. The **predicate instances** — which jurisdiction, which
 thresholds, which corporate instrument — are ordinary mandate detail and may be unresolved at
 Genesis without weakening the Rule. `[A-10]`
+
+### CR-8 `compass-confers-no-authority`
+
+The Research Scheme and its `ResearchCompass` direct inquiry but never confer authority. No Rule
+may treat Compass alignment, Frontier priority, Campaign direction, or any research-derived value
+as a grant, mandate, approval, budget authority, or permission for an external effect. Research
+must pass through the same Identity, mandate, Rule, review, and Act machinery as every other
+Powerfarm activity.
+
+This Rule applies across all Rule evaluations. The Research Scheme remains an ordinary governed
+object so its direction can evolve without constitutional amendment.
 
 ---
 
@@ -510,11 +523,11 @@ instruments are not.
 
 | This document | Artifact |
 |---|---|
-| Parts I, II | `genesis.yaml` scalar bindings + `structural_laws` list `[A-7]` |
-| Part III | seven `kind=rule` definition objects, hashes bound into `genesis.yaml` |
+| Parts I, II | content-bound Genesis manifest fields + `structural_laws` list `[A-7]` |
+| Part III | eight `kind=rule` definition objects, hashes bound through the Registry manifest |
 | Parts IV–VII | `office`/`mandate` objects, CR-3/4/5/7, amendment protocol object |
-| Part VIII | seed manifest with canonical schemas, content hash bound into `genesis.yaml` |
-| Part IX | Identity objects + initial key material, bound by canonical content |
+| Part VIII | generated Registry manifest with canonical schemas and a bound manifest hash |
+| Part IX | Identity objects + initial public keys and custody records, bound by canonical content |
 
 The ceremony then admits these as the five Genesis Acts, and `genesis_root_hash` finally commits the
 whole constitution rather than a 19-line summary of it.

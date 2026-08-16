@@ -42,7 +42,7 @@
     "succession_quorum": 2
   },
   "constitution": {
-    "content_hash": "7098ef558be1ce50a3a8ab89e678121374fc2974e0e0bd7b49f4dcae37c58943",
+    "content_hash": "4cdc24ffe5babfa2cbe51d3de60255c7bff68ca162118673f7cb1dc5793d8219",
     "path": "GENESIS_DESIGN_PACK/constitution/01_Genesis_Constitution_0.2.md",
     "ratified": false
   },
@@ -56,7 +56,7 @@
   ],
   "hash": "sha256",
   "identities": {},
-  "manifest_hash": "14b85c316fb36c3a4f5185c95f5b0ab2f0a9c8dcbcdb37ce4f1b20115411d73f",
+  "manifest_hash": "b55d9c992e45b579227114361387b0866037715f4bf5f500fbc82edaaa072b7c",
   "ratification_status": "blocked",
   "ratifications": {
     "A-8": "OPEN",
@@ -80,11 +80,13 @@
   },
   "registry_definition_count": 102,
   "registry_manifest_hash": "b68a04a0dccd85efd431eef6e75a8e50451ae1a3e3f5b62d654d15ca9d11ba42",
-  "specification": "powerfarm-system-v3.2",
+  "specification": "powerfarm-kernel-specification-v1",
   "structural_laws": [
     "append-only-acts",
     "reference-by-hash",
     "acyclic-ancestry",
+    "acyclic-constitutional-dependency",
+    "typed-relations",
     "one-authoritative-admission-door"
   ]
 }

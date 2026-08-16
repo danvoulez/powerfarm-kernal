@@ -1,0 +1,2 @@
+# Preserve the byte-exact supplied Research Scheme, including Markdown hard breaks.
+GENESIS_DESIGN_PACK/constitution/02_Research_Scheme_Compass.md whitespace=-trailing-space,-blank-at-eof

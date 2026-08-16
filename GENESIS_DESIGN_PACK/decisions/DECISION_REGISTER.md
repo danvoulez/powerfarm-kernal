@@ -26,7 +26,7 @@ Last updated 2026-08-16 against commit `b3de7c7`.
 |---|---|---|
 | **D-Genesis-01** | Every name declared a *constitutional Rule* must resolve to a content-addressed `kind=rule` definition born at Genesis and citable in `rule_hashes`. Structural laws are separately enumerated, bound at Genesis, and enforced by construction. Neither list may contain a member of the other. *(Refined from the original form, which required all four `genesis.yaml` names to become Rules; two of them — `append-only-acts`, `reference-by-hash` — are structural laws, not decisions about Commands.)* | ACCEPTED |
 | **D-Genesis-02** | Constitutional registration seals at `GenesisClosed`. `constitutional=false` → ordinary governed path; `constitutional=true` pre-Genesis → ceremony only; post-Genesis → Genesis-born amendment protocol only, **otherwise reject, including Root**. Contradicts the execution pack's Phase 0b. | ACCEPTED |
-| **D-Genesis-03** | `genesis.yaml` must cryptographically bind the **canonical content** of every §16 item — specifically the initial Registry definitions and Root Identity + initial keys — not merely their names. | ACCEPTED |
+| **D-Genesis-03** | Genesis material must cryptographically bind the **canonical content** of every §16 item — specifically the initial Registry definitions and Root Identity + initial keys — not merely their names. The retired `genesis.yaml` is not an accepted ceremony input. | ACCEPTED |
 | **D-Genesis-04** | Resolve `amendment-or-fork`: give it real content-addressed substance at Genesis, or consciously ratify a fork-only universe. No third option exists after `GenesisClosed`. | **OPEN** |
 | **D-Genesis-05** | Genesis binds a constitutional Rule constraining Root's post-Genesis powers to: registering constitutional definitions at Genesis, creating initial Identities, and installing initial office holders. | ACCEPTED |
 
@@ -143,5 +143,5 @@ pack means two things.
 | **B1** | PF-21 proved at both the Kernel boundary (`conformance/test_pf21.py`, 8 tests) and the real admission boundary (`conformance/sql/pf21_admission.sql`, 7 assertions through `commit_act`). | **DONE** |
 | **B2** | `conformance/LAW_TEST_MAP.toml` + `conformance/test_law_coverage.py`: typed statuses, checked against the specification, `ENFORCED_UNPROVEN` set frozen against drift in both directions. | **DONE** |
 | **B3** | `conformance/sql/ledger_invariants.sql`: 12 assertions that attempt forbidden mutations and require the database to refuse. Closes PF-07, PF-10, PF-12. | **DONE** |
-| **B4** | CI mypy widened to `ledger service protocol`; shellcheck glob widened to `.claude/scene/*.sh`. Both were already clean. | **DONE** |
+| **B4** | CI mypy covers `kernel agent genesis ledger service protocol`; machine-deployment and editor-agent scaffolding were removed from the Kernel tree. | **DONE** |
 | **B5** | The nine-law bundled test split into one test per law. | **DONE** |

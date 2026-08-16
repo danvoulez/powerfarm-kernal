@@ -1,6 +1,8 @@
 # Research Scheme ↔ Constitution Reconciliation
 
-Closes R-10. Finalises the Part VIII research vocabulary against the actual source.
+Closes R-10. Finalises the Part VIII research vocabulary against the exact source
+at `../constitution/02_Research_Scheme_Compass.md`
+(`cf22899d069f1fcabd7c1a0232364e99f5f0bd1caa0c9a26c1194a98627d9db3`).
 
 Design document. No code, migrations, or commits.
 

@@ -36,7 +36,7 @@ lying about its own obligations, which is the worst possible place to start.
 
 The runtime already anticipates this. `powerfarm.observation.admit` exists today, and its own
 description reads: *"Admit a provenance-bearing observation without conflating dispatch,
-observation, or external commitment"* ([protocol/mcp/tools.py:90-95](../../protocol/mcp/tools.py:90)).
+observation, or external commitment"* ([protocol/mcp/tools.py:90-95](../../protocol/mcp/tools.py)).
 `ObservationAdmitted` is registered vocabulary. The phase Act types (`Dispatched`, `Observed`,
 `DispatchFailed`, `EffectRetried`) are not yet registered — ordinary vocabulary, Part VIII work.
 

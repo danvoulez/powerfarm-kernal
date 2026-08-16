@@ -1,6 +1,6 @@
 # Conformance law map.
 #
-# The normative list of laws lives in the specification, not here. The checker
+# The normative list of laws lives in SPECIFICATION.md, not here. The checker
 # (conformance/test_law_coverage.py) reads PF-NN identifiers out of the spec and
 # fails when one of them has no classified status -- so adding a law to the
 # constitution forces a decision here rather than being silently uncovered.

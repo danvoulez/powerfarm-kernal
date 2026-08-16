@@ -1,30 +1,33 @@
-# Evidence
+# Evidence and provenance
 
-Exactly what this pack was designed against. Every claim in the pack was verified against these
-artifacts at these hashes; anything else is inference and is marked as such where it appears.
+This file records the sources still needed to reproduce or audit the active
+institutional material. Historical reasoning remains available through Git; the
+active tree keeps only evidence with a current claim to support.
 
----
-
-## Repository
+## Current repository
 
 | Item | Value |
 |---|---|
-| Inspected commit | `b3de7c7fb83b7848f9f7b53ffe85c966d4556c9f` |
-| Commit subject | *Admit principal bindings through Acts, not by hand* |
-| Branch | `identity/principal-binding-acts` (1 ahead of local `main`) |
-| Migrations | 16, sealed — only additions |
+| Branch at consolidation | `identity/principal-binding-acts` |
+| Last committed milestone | `edf74ae` — deterministic M2 Genesis material |
+| Migrations | 18 SQL files, sealed; additions only |
+| Registry candidate | 102 definitions, generated from executable content |
+| Genesis state | candidate only; readiness gate blocked |
 
-## Documents
+## Institutional documents
 
-| File | SHA-256 |
+| Artifact | SHA-256 / status |
 |---|---|
-| `Powerfarm System Specification v3.md` (v3.2, **normative**) | `0082daf671fcac1727900460b1a7b5d040e7af3d4118f8c3e02fef606bb8b9f8` |
-| `Powerfarm Implementation Plan 2.md` | `7e9ed4dfd215f40897bb194f8f9b16d3df1ff885679287878b3bce0e37327c34` |
-| `genesis/genesis.yaml` | `2e43a3bf4ba0a84e3fb44ce4e7aa33751e9bdbb9d4af4169cc22911840159c12` |
+| `constitution/02_Research_Scheme_Compass.md` | `cf22899d069f1fcabd7c1a0232364e99f5f0bd1caa0c9a26c1194a98627d9db3` |
+| Original supplied filename | `Untitled document.md`; byte-identical to the promoted source |
+| Previous system specification v3.2 | `0082daf671fcac1727900460b1a7b5d040e7af3d4118f8c3e02fef606bb8b9f8`; removed from the active tree after consolidation into `SPECIFICATION.md` |
+| Previous implementation plan v2 | `7e9ed4dfd215f40897bb194f8f9b16d3df1ff885679287878b3bce0e37327c34`; removed as the superseded macOS/Supabase deployment profile |
 
-## Execution pack (2026-08-16) and its sources
+The Research Scheme hash is now canonical for the supplied v0.1 bytes. The
+reconciliation in `vocabulary/research_scheme_reconciliation.md` can therefore
+be checked directly against its source rather than against an absent transcription.
 
-The Fresh Agent Execution Pack self-verified: `shasum -c SHA256SUMS.txt` → **19/19 OK**.
+## Supplied implementation sources
 
 | Artifact | SHA-256 |
 |---|---|
@@ -32,50 +35,19 @@ The Fresh Agent Execution Pack self-verified: `shasum -c SHA256SUMS.txt` → **1
 | `cloudflare-os-main_ba4036b.zip` | `63f67b39d927105bf723521a08dea616837be8d25cd9c64b8d9fa01049fedbfa` |
 | `google-adk-2.7.0-offline.zip` | `3a8518e73a11f6395b319c9bb38bb7afd9229b8db3b3347a2cb1ad4c2dd5c530` |
 
-The pinned kernel snapshot is **content-identical** to the inspected working tree: `diff -r` yields
-zero tracked-file differences.
+The ADK compatibility contracts were derived from the offline wheel, including
+event identity, rewind, workflow state, plugin callbacks, confirmation, session
+state, artifacts, A2A conversion, registries, and Agent Engine services.
 
-## Google ADK
+## External evidence not present
 
-| Item | Value |
+| Unknown | Consequence |
 |---|---|
-| Offline pack SHA-256 | `3a8518e73a11f6395b319c9bb38bb7afd9229b8db3b3347a2cb1ad4c2dd5c530` |
-| Wheel | `google_adk-2.7.0-py3-none-any.whl` |
-| Modules inspected | 675 `.py` files, extracted and read directly |
+| Any admitted Genesis in an environment outside this repository | If one exists, the pre-Genesis change window is closed |
+| Any live Powerfarm database | Legacy data and deployed migration state cannot be inferred |
+| Live Cloudflare durable state | Re-keying and platform migration need a separate inventory |
+| Golden Bridge private source and strict-routing invariants | M5 inference-gateway conformance remains externally unverified |
+| Legal entity, jurisdiction, reviewers, public keys, and custody records | Genesis readiness correctly remains blocked |
 
-Verified from source, not documentation: `Event` fields and `Event.new_id()` (UUID, not content);
-`EventActions.rewind_before_invocation_id` and `events/_rewind_events.py`;
-`apps/_configs.py` resumability contract; `workflow/_base_node.py` (`rerun_on_resume`, schemas);
-`_node_status.py`, `_node_state.py`, `_workflow.py` (`sequence_barrier`, `max_concurrency`);
-`plugins/base_plugin.py` (15 callbacks, short-circuit semantics);
-`tools/tool_confirmation.py`; `sessions/session.py` and `state.py` scopes;
-`artifacts/base_artifact_service.py` (versioning and `delete_artifact`);
-`agents/invocation_context.py`; the A2A converters; ~8 registries;
-`sessions/vertex_ai_session_service.py` and `memory/vertex_ai_memory_bank_service.py`.
-
-## Research Scheme / Compass
-
-Supplied by Dan on 2026-08-16 as *Powerfarm Research Scheme v0.1*. Identified (R-10) as the document
-`01_Powerfarm_Platform_Plan_v2.md` cites throughout as "Compass §N" — all nine citations resolve,
-and `§29.9` = section 29, rule 9 is decisive.
-
-> **No canonical file hash exists yet.** The copy in `constitution/02_Research_Scheme_Compass.md`
-> is a transcription of what was supplied. Before it is treated as normative, replace it with the
-> canonical source and record its hash here.
-
-## Not verified — absent from all supplied material
-
-| Item | Consequence |
-|---|---|
-| `danvoulez/lab-mistral-rs-gateway` (Golden Bridge) | Private; zero references anywhere in the kernel repo. Every Phase 7 / strict-routing claim is unverifiable |
-| Any live Powerfarm database | Legacy `relations` rows cannot be checked |
-| The live Cloudflare account | Email-keyed durable state cannot be inventoried |
-| Whether `3fc601c` exists as a merge on `origin/main` | Local refs say no; needs a fetch. Provenance only, non-blocking |
-
-## Reproducing the SQL conformance locally
-
-PostgreSQL **15+** is required (`security_invoker` is 15+; CI uses 17). On macOS, export `LC_ALL=C`
-before `initdb`/`pg_ctl` or the postmaster fails with *"postmaster became multithreaded during
-startup"*. Migrations additionally expect an `auth.users` table and the roles `anon`,
-`authenticated`, `service_role`, `powerfarm_worker`, `supabase_admin` to exist — a Supabase project
-supplies these; a bare instance does not.
+Absence is recorded as absence. It is not filled with fixtures, placeholder keys,
+or a synthetic ceremony.

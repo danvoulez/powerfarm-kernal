@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from mcp.server import CacheHint, MCPServer
 from mcp.server.auth.provider import TokenVerifier
@@ -14,7 +13,6 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from service.runtime import KernelRuntime, build_runtime_from_env
-from worker.github_webhook import MAX_BODY_BYTES, WebhookError, accept_delivery
 
 from .auth import auth_from_env
 from .resources import install_resources
@@ -87,25 +85,6 @@ def create_server(
                 "genesis_root_hash": os.environ.get("POWERFARM_GENESIS_ROOT", "unset"),
             }
         )
-
-    @server.custom_route(  # type: ignore[untyped-decorator]
-        "/integrations/github/webhook", methods=["POST"], include_in_schema=False
-    )
-    async def github_webhook(request: Request) -> JSONResponse:
-        body = await request.body()
-        if len(body) > MAX_BODY_BYTES:
-            return JSONResponse({"error": "payload too large"}, status_code=413)
-        home = Path(os.environ.get("POWERFARM_HOME", "."))
-        try:
-            created, _ = accept_delivery(
-                dict(request.headers),
-                body,
-                os.environ.get("GITHUB_WEBHOOK_SECRET", ""),
-                home / "inbox" / "github",
-            )
-        except WebhookError as error:
-            return JSONResponse({"error": str(error)}, status_code=error.status)
-        return JSONResponse({"accepted": created, "duplicate": not created}, status_code=202)
 
     return server
 

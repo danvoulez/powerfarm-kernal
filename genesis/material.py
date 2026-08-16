@@ -199,7 +199,7 @@ def build_genesis_manifest(
     ratifications = cast(CanonValue, source.get("ratifications"))
     content: dict[str, CanonValue] = {
         "format": "powerfarm-genesis-manifest-v1",
-        "specification": "powerfarm-system-v3.2",
+        "specification": "powerfarm-kernel-specification-v1",
         "canonicalization": "rfc8785-jcs-v1",
         "hash": "sha256",
         "ratification_status": "ready" if not blockers else "blocked",
@@ -214,7 +214,11 @@ def build_genesis_manifest(
         "registry_manifest_hash": registry["manifest_hash"],
         "registry_definition_count": registry["definition_count"],
         "structural_laws": [
-            "append-only-acts", "reference-by-hash", "acyclic-ancestry",
+            "append-only-acts",
+            "reference-by-hash",
+            "acyclic-ancestry",
+            "acyclic-constitutional-dependency",
+            "typed-relations",
             "one-authoritative-admission-door",
         ],
         "choices": choices,

@@ -1,10 +1,11 @@
 # Canonical Preimages — the frozen four
 
-**Status: FROZEN (R-26). Free before `GenesisClosed`, impossible after.**
+**Status: FROZEN (R-26), implemented by `c0144ab`.** Historical “Today” and
+“Required” passages below preserve the before/after decision that produced M0.
 
 These four change content hashes. They are not implementation TODOs that can be sequenced behind
 Phase 0 — they are shape decisions on content identity, and content identity is the one thing
-Genesis makes permanent. Ratify them alongside `genesis.yaml`, not after it.
+Genesis makes permanent. Ratify them through the content-bound Genesis material, not after it.
 
 ---
 

@@ -18,7 +18,7 @@ design decision / implementation TODO / design contradiction / post-Genesis haza
 | Dan absent from history | executive finding | **Implementation TODO** (history does not exist yet) |
 | `relations` / `identity_links` no writer | implementation defect | **Implementation TODO** |
 | Bootstrap recursion (`RegisterDefinition` needs Registry) | constitutional blocker | **Design decision** — it forces Genesis to be the unique membrane, which is a property to design around, not a defect |
-| `genesis.yaml` omits §16 bindings | constitutional blocker | **Design decision** — this is the document we are writing now |
+| Retired `genesis.yaml` omitted §16 bindings | constitutional blocker | **Resolved in form** — the content-bound Genesis manifest carries the bindings; real values remain subject to ratification |
 | `amendment-or-fork` has no content | constitutional blocker, urgent | **Design decision** — no ticking clock except one created by ratifying prematurely |
 | `declared-decision-cut` unmaterialized, enforcement hardcoded | implementation defect | **Implementation TODO**, with a **design decision** on attribution shape |
 | `POWERFARM_ROOT_IDENTITY_HASH` determines authority | constitutional blocker | **Post-Genesis hazard** — fine as ceremony input; unacceptable if it still determines authority after `GenesisClosed` |
@@ -28,7 +28,7 @@ design decision / implementation TODO / design contradiction / post-Genesis haza
 The sharper test you named, applied: *does mutable configuration remain authoritative after
 Genesis?* Today, structurally yes — `ConfiguredRuleResolver` rebuilds
 `RootAuthorityRule(entry.hash, self._root_identity_hash)` from the environment on **every**
-resolve, at any cut ([service/authority.py:104-107](../../service/authority.py:104)). So changing the
+resolve, at any cut ([service/authority.py:104-107](../../service/authority.py)). So changing the
 variable changes authority for all future decisions. That is the actual hazard, and it is a
 statement about the *post-Genesis* reading path, not about the existence of an env var.
 
@@ -324,8 +324,8 @@ separation physical rather than declarative.
 vocabulary, what Genesis binds: Root, the Director office, the mandate boundary, succession,
 recovery, the amendment protocol, and the initial holders.
 
-That document *is* `genesis.yaml`'s content, expressed as design before it is expressed as a
-binding. It resolves D-Director-03 through D-Director-08 and D-Genesis-03/04, and everything
+That document is the constitutional content consumed by the Genesis material generator, expressed
+as design before it is expressed as a binding. It resolves D-Director-03 through D-Director-08 and D-Genesis-03/04, and everything
 downstream — the promoter, the wrapper RPC, the Registry writer, the Rule engine — becomes
 implementation of a decided institution rather than scaffolding awaiting one.
 

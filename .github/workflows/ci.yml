@@ -25,10 +25,10 @@ jobs:
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
       - run: uv sync --extra dev --locked
       - run: uv run ruff check .
-      - run: uv run mypy kernel worker agent genesis ledger service protocol
+      - run: uv run mypy kernel agent genesis ledger service protocol
       - run: uv run pytest -q
       - run: uv run python -m genesis.material --check
-      - run: bash -n deploy/macos/*.sh deploy/macos/lib/*.sh scripts/ci/*.sh
+      - run: bash -n scripts/ci/*.sh
       - run: uv run python scripts/ci/check_sql.py
       - if: github.event_name == 'pull_request'
         run: scripts/ci/check_migration_history.sh origin/${{ github.base_ref }}
@@ -46,26 +46,3 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-17
       - run: PGBIN=/usr/lib/postgresql/17/bin scripts/ci/test_migrations.sh
-
-  package:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-      - run: uv sync --extra dev --locked
-      - run: >-
-          uv run shellcheck --severity=warning
-          deploy/macos/*.sh deploy/macos/lib/*.sh scripts/ci/*.sh .claude/scene/*.sh
-      - run: deploy/macos/package.sh --output dist-a
-      - run: deploy/macos/package.sh --output dist-b
-      - run: cmp dist-a/*.tar.gz dist-b/*.tar.gz
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: powerfarm-macos-arm64
-          path: dist-a/*
-          if-no-files-found: error

@@ -25,9 +25,8 @@ The server uses Streamable HTTP at `/mcp` with `stateless_http=True` and
 - tool and resource catalogs return cache hints;
 - OAuth protected-resource metadata and bearer-token verification are enabled in
   production;
-- Tasks are not advertised because Kernel operations are short deterministic calls.
-  Long-running Platform/ADK work must use explicit durable handles before the Tasks
-  extension is enabled.
+- the Kernel does not implement Tasks: its operations are short deterministic calls;
+  long-running Platform/ADK work uses explicit durable handles in those components.
 
 ## Semantic Tools
 
