@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c '\"${CLAUDE_PROJECT_DIR:-.}/.claude/scene/compose.sh\"'",
+            "timeout": 20,
+            "statusMessage": "Compondo a cena do Powerfarm…"
+          }
+        ]
+      }
+    ]
+  }
+}
