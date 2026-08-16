@@ -102,6 +102,10 @@ class PostgresStore:
             if row is None or bytes(row["canon"]) != canon or row["kind"] != kind:
                 raise ValueError("CAS collision")
 
+    def object_canon(self, object_hash: str) -> bytes | None:
+        record = self.get_object(object_hash)
+        return record.canon if record is not None else None
+
     def commit_act(self, act: Act, canon: bytes, command_type: str) -> Act:
         with self._pool.connection() as connection:
             row = connection.execute(
