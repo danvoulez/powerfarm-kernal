@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import AbstractContextManager
 from typing import Protocol
 
 from cryptography.exceptions import InvalidSignature
@@ -15,6 +16,7 @@ from .types import (
     PERMITTED_OUTCOMES,
     Act,
     Command,
+    Companion,
     Context,
     Decision,
     DecisionValidityDisposition,
@@ -42,9 +44,21 @@ class Store(Protocol):
     def has_act(self, act_hash: str) -> bool: ...
     def put_object(self, object_hash: str, canon: bytes, kind: str) -> None: ...
     def object_canon(self, object_hash: str) -> bytes | None: ...
-    def commit_act(self, act: Act, canon: bytes, command_type: str) -> Act: ...
+    def admission_scope(self) -> AbstractContextManager[Admission]: ...
     def get_act(self, act_hash: str) -> Act | None: ...
     def get_acts_for_command(self, command_hash: str) -> tuple[Act, ...]: ...
+
+
+class Admission(Protocol):
+    @property
+    def cut(self) -> frozenset[str]: ...
+    def admit(
+        self,
+        act: Act,
+        canon: bytes,
+        command_type: str,
+        companions: tuple[Companion, ...],
+    ) -> Act: ...
 
 
 class CommitGate:
@@ -53,7 +67,8 @@ class CommitGate:
 
     def commit(self, identity: Identity, command: Command, decision: Decision,
                context: Context, *, act_type: str, auth_chain: tuple[str, ...] = (),
-               claimed_when: str | None = None) -> Act:
+               claimed_when: str | None = None,
+               companions: tuple[Companion, ...] = ()) -> Act:
         if identity.hash != command.identity_hash:
             raise CommitError("identity mismatch")
         try:
@@ -61,7 +76,6 @@ class CommitGate:
                 command.signature, canonicalize(command.signing_value()))
         except (InvalidSignature, ValueError) as error:
             raise CommitError("invalid command signature") from error
-        current_cut = self._store.history_cut()
         validity_rule_hash = self._store.latest_definition_hash(
             "rule", DECLARED_DECISION_CUT_RULE, decision.registry_cut
         )
@@ -89,86 +103,91 @@ class CommitGate:
             # Replaying an occurrence that already holds its place is a read,
             # not a new admission against an advanced cut (PF-23).
             return existing_occurrence
-        validity = evaluate_declared_decision_cut(
-            validity_rule_hash, decision.cut, current_cut
-        )
-        if not self._store.registered("rule", validity.rule_hash, decision.registry_cut):
-            raise CommitError("unregistered decision-validity Rule at declared Registry cut")
-        if validity.disposition is DecisionValidityDisposition.REAUTHORIZE:
-            raise CommitError(validity.reason)
-        value = self._canonical_value(
-            identity,
-            command,
-            decision,
-            context,
-            act_type,
-            auth_chain,
-            validity.rule_hash,
-            validity.disposition.value,
-            claimed_when,
-        )
-        act_hash = object_hash("act", value)
-        existing = self._store.get_act(act_hash)
-        if existing is not None:
-            # This exact occurrence already holds its place in history (PF-23).
-            # Identity is content, so nothing else needs comparing.
-            return existing
-        permitted = PERMITTED_OUTCOMES.get(act_type, CONSEQUENTIAL_OUTCOMES)
-        if decision.outcome not in permitted:
-            raise CommitError(
-                f"{act_type} requires {'/'.join(sorted(permitted))}, got {decision.outcome}")
-        if act_type not in LIFECYCLE_ACT_TYPES and any(
-            act.act_type not in LIFECYCLE_ACT_TYPES
-            for act in self._store.get_acts_for_command(command.hash)
-        ):
-            # An intent buys its change once. Lifecycle stages may accumulate;
-            # consequence may not (section 6.1).
-            raise CommitError("Command already produced a consequential Act")
-        self._require_structural_proof(command, act_type, auth_chain)
-        if not self._store.registered("command_type", command.command_type, decision.registry_cut):
-            raise CommitError("unregistered command type")
-        if not self._store.registered("act_type", act_type, decision.registry_cut):
-            raise CommitError("unregistered act type")
-        if not decision.rule_hashes:
-            raise CommitError("consequential commit requires at least one Rule")
-        if any(
-            not self._store.registered("rule", rule_hash, decision.registry_cut)
-            for rule_hash in decision.rule_hashes
-        ):
-            raise CommitError("unregistered Rule at declared Registry cut")
-        if any(
-            not self._store.definition_registered(
-                "context_type", key, definition_hash, decision.registry_cut
-            )
-            for key, definition_hash in context.types.items()
-        ):
-            raise CommitError("unregistered Context type at declared Registry cut")
-        if not self._store.has_object(command.payload_hash):
-            raise CommitError("payload must already exist in CAS")
-        if any(not self._store.has_act(parent) for parent in command.parents):
-            raise CommitError("every parent must be an existing Act")
         self._store.put_object(command.hash, canonicalize(command.signing_value()), "command")
         self._store.put_object(context.hash, canonicalize(context.canonical_value()), "context")
-        act = Act(
-            hash=act_hash,
-            act_type=act_type,
-            identity_hash=identity.hash,
-            parents=command.parents,
-            decision_cut=decision.cut,
-            command_hash=command.hash,
-            auth_chain=auth_chain,
-            registry_cut=decision.registry_cut,
-            rule_hashes=decision.rule_hashes,
-            context_hash=context.hash,
-            payload_hash=command.payload_hash,
-            validity_rule_hash=validity.rule_hash,
-            validity_disposition=validity.disposition,
-            claimed_when=claimed_when,
-        )
-        try:
-            return self._store.commit_act(act, canonicalize(value), command.command_type)
-        except Exception as error:
-            raise CommitError("store rejected Act") from error
+        with self._store.admission_scope() as admission:
+            validity = evaluate_declared_decision_cut(
+                validity_rule_hash, decision.cut, admission.cut
+            )
+            if not self._store.registered("rule", validity.rule_hash, decision.registry_cut):
+                raise CommitError("unregistered decision-validity Rule at declared Registry cut")
+            if validity.disposition is DecisionValidityDisposition.REAUTHORIZE:
+                raise CommitError(validity.reason)
+            value = self._canonical_value(
+                identity,
+                command,
+                decision,
+                context,
+                act_type,
+                auth_chain,
+                validity.rule_hash,
+                validity.disposition.value,
+                claimed_when,
+            )
+            act_hash = object_hash("act", value)
+            existing = self._store.get_act(act_hash)
+            if existing is not None:
+                # This exact occurrence already holds its place in history (PF-23).
+                # Identity is content, so nothing else needs comparing.
+                return existing
+            permitted = PERMITTED_OUTCOMES.get(act_type, CONSEQUENTIAL_OUTCOMES)
+            if decision.outcome not in permitted:
+                raise CommitError(
+                    f"{act_type} requires {'/'.join(sorted(permitted))}, got {decision.outcome}")
+            if act_type not in LIFECYCLE_ACT_TYPES and any(
+                act.act_type not in LIFECYCLE_ACT_TYPES
+                for act in self._store.get_acts_for_command(command.hash)
+            ):
+                # An intent buys its change once. Lifecycle stages may accumulate;
+                # consequence may not (section 6.1).
+                raise CommitError("Command already produced a consequential Act")
+            self._require_structural_proof(command, act_type, auth_chain)
+            if not self._store.registered(
+                "command_type", command.command_type, decision.registry_cut
+            ):
+                raise CommitError("unregistered command type")
+            if not self._store.registered("act_type", act_type, decision.registry_cut):
+                raise CommitError("unregistered act type")
+            if not decision.rule_hashes:
+                raise CommitError("consequential commit requires at least one Rule")
+            if any(
+                not self._store.registered("rule", rule_hash, decision.registry_cut)
+                for rule_hash in decision.rule_hashes
+            ):
+                raise CommitError("unregistered Rule at declared Registry cut")
+            if any(
+                not self._store.definition_registered(
+                    "context_type", key, definition_hash, decision.registry_cut
+                )
+                for key, definition_hash in context.types.items()
+            ):
+                raise CommitError("unregistered Context type at declared Registry cut")
+            if not self._store.has_object(command.payload_hash):
+                raise CommitError("payload must already exist in CAS")
+            if any(not self._store.has_act(parent) for parent in command.parents):
+                raise CommitError("every parent must be an existing Act")
+            act = Act(
+                hash=act_hash,
+                act_type=act_type,
+                identity_hash=identity.hash,
+                parents=command.parents,
+                decision_cut=decision.cut,
+                command_hash=command.hash,
+                auth_chain=auth_chain,
+                registry_cut=decision.registry_cut,
+                rule_hashes=decision.rule_hashes,
+                context_hash=context.hash,
+                payload_hash=command.payload_hash,
+                validity_rule_hash=validity.rule_hash,
+                validity_disposition=validity.disposition,
+                claimed_when=claimed_when,
+            )
+            try:
+                return admission.admit(
+                    act, canonicalize(value), command.command_type, companions
+                )
+            except Exception as error:
+                raise CommitError("store rejected Act") from error
 
     def _require_structural_proof(self, command: Command, act_type: str,
                                   auth_chain: tuple[str, ...]) -> None:

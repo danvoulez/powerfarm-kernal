@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from agent.tools import propose_command
 from kernel.canon import canonicalize, object_hash
+from kernel.commit import CommitError
 from kernel.rules import RuleResult
 from kernel.types import Act, Context, DecisionKind, DecisionValidityDisposition, Identity
 from kernel.validity import DECLARED_DECISION_CUT_RULE
@@ -56,7 +57,20 @@ def build() -> tuple[PrincipalService, MemoryLedger, Identity, Ed25519PrivateKey
     for name in ("LinkPrincipal", "RevokePrincipal"):
         ledger.register("command_type", name, GENESIS)
     for name in ("PrincipalLinked", "PrincipalRevoked"):
-        ledger.register("act_type", name, GENESIS)
+        ledger.register(
+            "act_type",
+            name,
+            GENESIS,
+            definition={
+                "kind": "act_type",
+                "name": name,
+                "version": 1,
+                "companion": {
+                    "writer": "principal_bindings",
+                    "cardinality": "exactly_one",
+                },
+            },
+        )
     for key in DERIVED_CONTEXT_KEYS:
         ledger.register(
             "context_type", key, GENESIS, entry_hash=context_type_hash(key)
@@ -68,7 +82,7 @@ def build() -> tuple[PrincipalService, MemoryLedger, Identity, Ed25519PrivateKey
     resolver = ConfiguredRuleResolver(
         ledger, rule_names=("test.allow",), static_rules={"test.allow": AllowRule()})
     authority = AuthorityService(ledger, resolver, allow_signed_without_oauth=True)
-    return PrincipalService(authority, ledger), ledger, steward, private
+    return PrincipalService(authority), ledger, steward, private
 
 
 def request(ledger: MemoryLedger, steward: Identity, private: Ed25519PrivateKey,
@@ -127,3 +141,36 @@ def test_an_incomplete_payload_cannot_link() -> None:
         service.link(request(
             ledger, steward, private, "LinkPrincipal", "PrincipalLinked",
             {"issuer": ISSUER, "subject": SUBJECT}, "x-2"))
+
+
+def test_rejected_companion_rolls_back_the_act() -> None:
+    service, ledger, steward, private = build()
+
+    with pytest.raises(CommitError, match="store rejected Act"):
+        service.link(request(
+            ledger, steward, private, "LinkPrincipal", "PrincipalLinked",
+            {
+                "issuer": ISSUER,
+                "subject": SUBJECT,
+                "identity_hash": "f" * 64,
+            },
+            "bad-target",
+        ))
+
+    assert len(ledger.acts) == 1
+    assert ledger.resolve_principal(ISSUER, SUBJECT) is None
+
+
+def test_duplicate_live_binding_does_not_leave_a_second_act() -> None:
+    service, ledger, steward, private = build()
+    service.link(request(
+        ledger, steward, private, "LinkPrincipal", "PrincipalLinked",
+        {"issuer": ISSUER, "subject": SUBJECT, "identity_hash": steward.hash}, "link-1"))
+
+    with pytest.raises(CommitError, match="store rejected Act"):
+        service.link(request(
+            ledger, steward, private, "LinkPrincipal", "PrincipalLinked",
+            {"issuer": ISSUER, "subject": SUBJECT, "identity_hash": steward.hash}, "link-2"))
+
+    assert len(ledger.acts) == 2
+    assert ledger.resolve_principal(ISSUER, SUBJECT) == steward.hash

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from .canon import object_hash
-from .types import Act
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+
+from .canon import CanonValue, object_hash
+from .types import Act, Companion
 
 
 class MemoryStore:
@@ -15,6 +18,7 @@ class MemoryStore:
         # is the subject whose trajectory we reconstruct, never the occurrence.
         self.command_index: dict[str, list[str]] = {}
         self.registry: set[tuple[str, str, int, str, str]] = set()
+        self.registry_definitions: dict[str, CanonValue] = {}
 
     def history_cut(self) -> frozenset[str]:
         # A cut is closed under ancestry (spec v3 section 10.2): the full known
@@ -54,6 +58,7 @@ class MemoryStore:
         *,
         version: int = 1,
         entry_hash: str | None = None,
+        definition: CanonValue | None = None,
     ) -> str:
         definition_hash = entry_hash or (
             name
@@ -61,7 +66,28 @@ class MemoryStore:
             else object_hash("registry", {"kind": kind, "name": name, "version": version})
         )
         self.registry.add((kind, name, version, definition_hash, born_at))
+        self.registry_definitions[definition_hash] = definition or {
+            "kind": kind, "name": name, "version": version
+        }
         return definition_hash
+
+    @contextmanager
+    def admission_scope(self) -> Iterator[_MemoryAdmission]:
+        snapshot = (
+            self.objects.copy(),
+            self.acts.copy(),
+            {key: list(value) for key, value in self.command_index.items()},
+            self._companion_snapshot(),
+        )
+        admission = _MemoryAdmission(self, self.history_cut())
+        try:
+            yield admission
+        except Exception:
+            self.objects, self.acts, self.command_index, companion_state = snapshot
+            self._restore_companion_snapshot(companion_state)
+            raise
+        finally:
+            admission.close()
 
     def has_object(self, object_hash: str) -> bool:
         return object_hash in self.objects
@@ -86,8 +112,18 @@ class MemoryStore:
         self.acts[act.hash] = act
         self.command_index.setdefault(act.command_hash, []).append(act.hash)
 
-    def commit_act(self, act: Act, canon: bytes, command_type: str) -> Act:
+    def _admit(
+        self,
+        admission_cut: frozenset[str],
+        act: Act,
+        canon: bytes,
+        command_type: str,
+        companions: tuple[Companion, ...],
+    ) -> Act:
         del command_type
+        if self.history_cut() != admission_cut:
+            raise ValueError("admission cut changed while scope was open")
+        self._validate_companions(act, companions)
         existing = self.acts.get(act.hash)
         if existing is not None:
             return existing
@@ -101,7 +137,42 @@ class MemoryStore:
             if old is None:
                 self.objects.pop(act.hash, None)
             raise
+        self._apply_companions(act, companions)
         return act
+
+    def _validate_companions(self, act: Act, companions: tuple[Companion, ...]) -> None:
+        definition_hash = self.latest_definition_hash(
+            "act_type", act.act_type, act.registry_cut
+        )
+        definition = self.registry_definitions.get(definition_hash or "")
+        contract = definition.get("companion") if isinstance(definition, Mapping) else None
+        if contract is None:
+            if companions:
+                raise ValueError("Act type declares no companion")
+            return
+        if not isinstance(contract, Mapping):
+            raise TypeError("invalid companion contract")
+        writer = contract.get("writer")
+        cardinality = contract.get("cardinality")
+        if cardinality == "exactly_one" and len(companions) != 1:
+            raise ValueError("companion contract requires exactly one row")
+        if cardinality == "one_or_more" and not companions:
+            raise ValueError("companion contract requires one or more rows")
+        if cardinality not in {"exactly_one", "one_or_more"}:
+            raise ValueError("unsupported companion cardinality")
+        if any(companion.writer.value != writer for companion in companions):
+            raise ValueError("companion writer does not match Act type contract")
+
+    def _apply_companions(self, act: Act, companions: tuple[Companion, ...]) -> None:
+        del act
+        if companions:
+            raise ValueError("companion writer is not implemented by this store")
+
+    def _companion_snapshot(self) -> object:
+        return None
+
+    def _restore_companion_snapshot(self, snapshot: object) -> None:
+        del snapshot
 
     def get_act(self, act_hash: str) -> Act | None:
         return self.acts.get(act_hash)
@@ -109,3 +180,24 @@ class MemoryStore:
     def get_acts_for_command(self, command_hash: str) -> tuple[Act, ...]:
         """Every Act referencing this Command -- its whole lifecycle (PF-15)."""
         return tuple(self.acts[h] for h in self.command_index.get(command_hash, ()))
+
+
+class _MemoryAdmission:
+    def __init__(self, store: MemoryStore, cut: frozenset[str]) -> None:
+        self._store = store
+        self.cut = cut
+        self._active = True
+
+    def close(self) -> None:
+        self._active = False
+
+    def admit(
+        self,
+        act: Act,
+        canon: bytes,
+        command_type: str,
+        companions: tuple[Companion, ...],
+    ) -> Act:
+        if not self._active:
+            raise RuntimeError("admission scope is closed")
+        return self._store._admit(self.cut, act, canon, command_type, companions)

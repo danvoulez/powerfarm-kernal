@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from kernel.canon import CanonValue
-from kernel.types import Act
-from ledger.base import BindingProjection
+from kernel.types import Act, Companion, CompanionWriter
 
 from .authority import AuthorityService
 from .errors import ValidationError
@@ -25,34 +24,37 @@ class PrincipalService:
     rather than standing beside it.
     """
 
-    def __init__(self, authority: AuthorityService, ledger_writer: BindingProjection) -> None:
+    def __init__(self, authority: AuthorityService) -> None:
         self._authority = authority
-        self._bindings = ledger_writer
 
     def link(
         self, request: ActionRequest, principal: RequestPrincipal | None = None
     ) -> tuple[EvaluatedAction, Act]:
         payload = self._require_payload(request, LINK)
-        evaluated, act = self._authority.commit(request, principal)
-        self._bindings.link_principal(
-            issuer=str(payload["issuer"]),
-            subject=str(payload["subject"]),
-            identity_hash=str(payload["identity_hash"]),
-            linked_act=act.hash,
+        companion = Companion(
+            CompanionWriter.PRINCIPAL_BINDINGS,
+            {
+                "operation": "link",
+                "issuer": str(payload["issuer"]),
+                "subject": str(payload["subject"]),
+                "identity_hash": str(payload["identity_hash"]),
+            },
         )
-        return evaluated, act
+        return self._authority.commit(request, principal, companions=(companion,))
 
     def revoke(
         self, request: ActionRequest, principal: RequestPrincipal | None = None
     ) -> tuple[EvaluatedAction, Act]:
         payload = self._require_payload(request, REVOKE)
-        evaluated, act = self._authority.commit(request, principal)
-        self._bindings.revoke_principal(
-            issuer=str(payload["issuer"]),
-            subject=str(payload["subject"]),
-            unlinked_act=act.hash,
+        companion = Companion(
+            CompanionWriter.PRINCIPAL_BINDINGS,
+            {
+                "operation": "revoke",
+                "issuer": str(payload["issuer"]),
+                "subject": str(payload["subject"]),
+            },
         )
-        return evaluated, act
+        return self._authority.commit(request, principal, companions=(companion,))
 
     @staticmethod
     def _require_payload(

@@ -114,7 +114,7 @@ $q$);
 -- its own parent. Both refusals are asserted rather than inferred.
 
 select pg_temp.must_refuse('Act declaring itself as parent', $q$
-  select powerfarm_internal.commit_act(
+  select powerfarm_internal.commit_act_internal(
     repeat('bd', 32), '\xbd'::bytea, 'ProbeHappened', 'InvariantProbe', repeat('ac', 32),
     to_jsonb(array[repeat('bd', 32)]),
     to_jsonb(array(select hash from public.acts order by hash)),
@@ -125,7 +125,7 @@ select pg_temp.must_refuse('Act declaring itself as parent', $q$
 $q$);
 
 select pg_temp.must_refuse('Act naming a parent that does not exist', $q$
-  select powerfarm_internal.commit_act(
+  select powerfarm_internal.commit_act_internal(
     repeat('bd', 32), '\xbd'::bytea, 'ProbeHappened', 'InvariantProbe', repeat('ac', 32),
     to_jsonb(array[repeat('fe', 32)]),
     to_jsonb(array(select hash from public.acts order by hash)),

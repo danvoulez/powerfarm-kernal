@@ -2,7 +2,7 @@
 --
 -- conformance/test_pf21.py proves the Kernel resolves semantic dependencies to
 -- exact definitions. That proves the Kernel agrees with itself. This file runs
--- the same matrix through `powerfarm_internal.commit_act` -- the function that
+-- the same matrix through `powerfarm_internal.commit_act_internal` -- the function that
 -- actually admits Acts -- because PF-21 is a claim about what is *admitted*, not
 -- about what Python intended.
 --
@@ -88,7 +88,7 @@ end $$;
 
 
 -- Case 1 -- exact Registry cut, exact Rule hash, admitted.
-select powerfarm_internal.commit_act(
+select powerfarm_internal.commit_act_internal(
   repeat('c', 64), '\xc0'::bytea, 'ThingCreated', 'CreateThing', repeat('2', 64),
   to_jsonb(array[repeat('0', 64)]),
   to_jsonb(array[repeat('0', 64), repeat('1', 64)]),
@@ -115,7 +115,7 @@ end $$;
 -- Case 2 -- v2 exists in history, but is not born within the declared Registry
 -- cut. "Latest" is not a resolution strategy.
 select pg_temp.must_refuse('rule born after the declared Registry cut', $q$
-  select powerfarm_internal.commit_act(
+  select powerfarm_internal.commit_act_internal(
     repeat('e', 64), '\xe0'::bytea, 'ThingCreated', 'CreateThing', repeat('2', 64),
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('0', 64), repeat('1', 64), repeat('c', 64)]),
@@ -128,7 +128,7 @@ $q$);
 -- Case 3 -- a Rule hash nobody registered. The name 'test.allow' is registered
 -- twice over; the hash is what must resolve.
 select pg_temp.must_refuse('right name, unregistered hash', $q$
-  select powerfarm_internal.commit_act(
+  select powerfarm_internal.commit_act_internal(
     repeat('e', 64), '\xe0'::bytea, 'ThingCreated', 'CreateThing', repeat('2', 64),
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('0', 64), repeat('1', 64), repeat('c', 64)]),
@@ -140,7 +140,7 @@ $q$);
 
 -- Case 4 -- an act type that is not registered at the declared Registry cut.
 select pg_temp.must_refuse('act type unregistered at the declared cut', $q$
-  select powerfarm_internal.commit_act(
+  select powerfarm_internal.commit_act_internal(
     repeat('e', 64), '\xe0'::bytea, 'NeverRegistered', 'CreateThing', repeat('2', 64),
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('0', 64), repeat('1', 64), repeat('c', 64)]),
@@ -153,7 +153,7 @@ $q$);
 -- Case 5 -- one unresolvable hash among several rejects the whole admission.
 -- Partial attribution is not a thing.
 select pg_temp.must_refuse('one bad hash among several', $q$
-  select powerfarm_internal.commit_act(
+  select powerfarm_internal.commit_act_internal(
     repeat('e', 64), '\xe0'::bytea, 'ThingCreated', 'CreateThing', repeat('2', 64),
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('0', 64), repeat('1', 64), repeat('c', 64)]),
@@ -165,7 +165,7 @@ $q$);
 
 -- Case 6 -- no Rule at all cannot buy a consequence.
 select pg_temp.must_refuse('empty rule_hashes', $q$
-  select powerfarm_internal.commit_act(
+  select powerfarm_internal.commit_act_internal(
     repeat('e', 64), '\xe0'::bytea, 'ThingCreated', 'CreateThing', repeat('2', 64),
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('0', 64), repeat('1', 64), repeat('c', 64)]),
@@ -178,7 +178,7 @@ $q$);
 -- R-26 -- decision validity is separately attributed to CR-1.  An ordinary
 -- authorization Rule cannot be smuggled into that field.
 select pg_temp.must_refuse('authorization Rule used as decision-validity Rule', $q$
-  select powerfarm_internal.commit_act(
+  select powerfarm_internal.commit_act_internal(
     repeat('e', 64), '\xe0'::bytea, 'ThingCreated', 'CreateThing', repeat('2', 64),
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('0', 64), repeat('1', 64), repeat('c', 64)]),
@@ -189,7 +189,7 @@ select pg_temp.must_refuse('authorization Rule used as decision-validity Rule', 
 $q$);
 
 select pg_temp.must_refuse('COMMIT_REGARDLESS is unreachable in CR-1 v1', $q$
-  select powerfarm_internal.commit_act(
+  select powerfarm_internal.commit_act_internal(
     repeat('e', 64), '\xe0'::bytea, 'ThingCreated', 'CreateThing', repeat('2', 64),
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('0', 64), repeat('1', 64), repeat('c', 64)]),

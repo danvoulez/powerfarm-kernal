@@ -6,7 +6,7 @@ import base64
 
 from kernel.canon import CanonValue, canonicalize, object_hash
 from kernel.memory import MemoryStore
-from kernel.types import Act, Identity
+from kernel.types import Act, Companion, CompanionWriter, Identity
 
 from .base import ObjectRecord, RegistryEntry
 
@@ -37,13 +37,19 @@ class MemoryLedger(MemoryStore):
         version: int = 1,
         constitutional: bool = False,
         entry_hash: str | None = None,
+        definition: CanonValue | None = None,
     ) -> str:
-        value: dict[str, CanonValue] = {"kind": kind, "name": name, "version": version}
+        value: CanonValue = definition or {"kind": kind, "name": name, "version": version}
         definition_hash = entry_hash or (
             name if kind == "rule" and len(name) == 64 else object_hash("registry", value)
         )
         super().register(
-            kind, name, born_at, version=version, entry_hash=definition_hash
+            kind,
+            name,
+            born_at,
+            version=version,
+            entry_hash=definition_hash,
+            definition=value,
         )
         self._registry_metadata[(kind, name, born_at)] = RegistryEntry(
             hash=definition_hash,
@@ -115,14 +121,41 @@ class MemoryLedger(MemoryStore):
             return None
         return self.principal_bindings.get((issuer, subject))
 
-    def link_principal(self, *, issuer: str, subject: str, identity_hash: str,
-                       linked_act: str) -> None:
-        del linked_act
-        self.principal_bindings[(issuer, subject)] = identity_hash
+    def _companion_snapshot(self) -> object:
+        return self.principal_bindings.copy()
 
-    def revoke_principal(self, *, issuer: str, subject: str, unlinked_act: str) -> None:
-        del unlinked_act
-        self.unlink_principal(issuer, subject)
+    def _restore_companion_snapshot(self, snapshot: object) -> None:
+        if not isinstance(snapshot, dict):
+            raise TypeError("invalid principal-binding snapshot")
+        self.principal_bindings = snapshot
+
+    def _apply_companions(self, act: Act, companions: tuple[Companion, ...]) -> None:
+        for companion in companions:
+            if companion.writer is not CompanionWriter.PRINCIPAL_BINDINGS:
+                raise ValueError("unsupported companion writer")
+            row = companion.row
+            issuer = row.get("issuer")
+            subject = row.get("subject")
+            operation = row.get("operation")
+            if not isinstance(issuer, str) or not issuer:
+                raise ValueError("principal companion requires issuer")
+            if not isinstance(subject, str) or not subject:
+                raise ValueError("principal companion requires subject")
+            key = (issuer, subject)
+            if operation == "link":
+                identity_hash = row.get("identity_hash")
+                if not isinstance(identity_hash, str) or identity_hash not in self.identities:
+                    raise ValueError("principal companion requires a known Identity")
+                if key in self.principal_bindings:
+                    raise ValueError("credential principal already has a live binding")
+                self.principal_bindings[key] = identity_hash
+            elif operation == "revoke":
+                if key not in self.principal_bindings:
+                    raise ValueError("credential principal has no live binding")
+                del self.principal_bindings[key]
+            else:
+                raise ValueError("unsupported principal companion operation")
+        del act
 
     def unlink_principal(self, issuer: str, subject: str) -> None:
         """Revocation: the binding stops resolving. History keeps the Act."""

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import base64
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from typing import Any, cast
 
 from psycopg import Connection
@@ -12,7 +13,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
-from kernel.types import Act, DecisionValidityDisposition, Identity
+from kernel.types import Act, Companion, DecisionValidityDisposition, Identity
 
 from .base import ObjectRecord, RegistryEntry
 
@@ -136,36 +137,16 @@ class PostgresStore:
         record = self.get_object(object_hash)
         return record.canon if record is not None else None
 
-    def commit_act(self, act: Act, canon: bytes, command_type: str) -> Act:
-        with self._pool.connection() as connection:
+    @contextmanager
+    def admission_scope(self) -> Iterator[_PostgresAdmission]:
+        """Pin the gate lock, cut, Act, and companion writes to one transaction."""
+        with self._pool.connection() as connection, connection.transaction():
             row = connection.execute(
-                """
-                select * from powerfarm_internal.commit_act(
-                  %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                )
-                """,
-                (
-                    act.hash,
-                    canon,
-                    act.act_type,
-                    command_type,
-                    act.identity_hash,
-                    Jsonb(list(act.parents)),
-                    Jsonb(sorted(act.decision_cut)),
-                    act.command_hash,
-                    Jsonb(list(act.auth_chain)),
-                    Jsonb(sorted(act.registry_cut)),
-                    Jsonb(list(act.rule_hashes)),
-                    act.context_hash,
-                    act.payload_hash,
-                    act.validity_rule_hash,
-                    act.validity_disposition.value,
-                    act.claimed_when,
-                ),
+                "select powerfarm_internal.begin_admission() as cut"
             ).fetchone()
-        if row is None:
-            raise RuntimeError("commit RPC returned no Act")
-        return _row_to_act(row)
+            if row is None:
+                raise RuntimeError("admission scope returned no cut")
+            yield _PostgresAdmission(connection, frozenset(row["cut"]))
 
     def get_object(self, object_hash: str) -> ObjectRecord | None:
         with self._pool.connection() as connection:
@@ -209,31 +190,6 @@ class PostgresStore:
                 "select * from public.acts where command_hash = %s order by seq", (command_hash,)
             ).fetchall()
         return tuple(_row_to_act(row) for row in rows)
-
-    def link_principal(self, *, issuer: str, subject: str, identity_hash: str,
-                       linked_act: str) -> None:
-        """Project a PrincipalLinked Act. The partial unique index is the guard:
-        a second live binding for the same principal is refused by the database."""
-        with self._pool.connection() as connection:
-            connection.execute(
-                """
-                insert into public.principal_bindings
-                  (issuer, subject, identity_hash, linked_act)
-                values (%s, %s, %s, %s)
-                on conflict (issuer, subject, linked_act) do nothing
-                """,
-                (issuer, subject, identity_hash, linked_act),
-            )
-
-    def revoke_principal(self, *, issuer: str, subject: str, unlinked_act: str) -> None:
-        with self._pool.connection() as connection:
-            connection.execute(
-                """
-                update public.principal_bindings set unlinked_act = %s
-                where issuer = %s and subject = %s and unlinked_act is null
-                """,
-                (unlinked_act, issuer, subject),
-            )
 
     def get_identity(self, identity_hash: str, cut: frozenset[str]) -> Identity | None:
         with self._pool.connection() as connection:
@@ -309,3 +265,52 @@ class PostgresStore:
 
     def close(self) -> None:
         self._pool.close()
+
+
+class _PostgresAdmission:
+    def __init__(
+        self,
+        connection: Connection[dict[str, Any]],
+        cut: frozenset[str],
+    ) -> None:
+        self._connection = connection
+        self.cut = cut
+
+    def admit(
+        self,
+        act: Act,
+        canon: bytes,
+        command_type: str,
+        companions: tuple[Companion, ...],
+    ) -> Act:
+        row = self._connection.execute(
+            """
+            select * from powerfarm_internal.admit(
+              %s, %s, %s, %s, %s, %s, %s, %s, %s,
+              %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            """,
+            (
+                act.hash,
+                canon,
+                act.act_type,
+                command_type,
+                act.identity_hash,
+                Jsonb(list(act.parents)),
+                Jsonb(sorted(act.decision_cut)),
+                act.command_hash,
+                Jsonb(list(act.auth_chain)),
+                Jsonb(sorted(act.registry_cut)),
+                Jsonb(list(act.rule_hashes)),
+                act.context_hash,
+                act.payload_hash,
+                act.validity_rule_hash,
+                act.validity_disposition.value,
+                act.claimed_when,
+                Jsonb(sorted(self.cut)),
+                Jsonb([companion.canonical_value() for companion in companions]),
+            ),
+        ).fetchone()
+        if row is None:
+            raise RuntimeError("admission RPC returned no Act")
+        return _row_to_act(row)

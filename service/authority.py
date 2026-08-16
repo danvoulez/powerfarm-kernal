@@ -18,6 +18,7 @@ from kernel.types import (
     PERMITTED_OUTCOMES,
     Act,
     Command,
+    Companion,
     Context,
     Decision,
     DecisionKind,
@@ -176,7 +177,11 @@ class AuthorityService:
         )
 
     def commit(
-        self, request: ActionRequest, principal: RequestPrincipal | None = None
+        self,
+        request: ActionRequest,
+        principal: RequestPrincipal | None = None,
+        *,
+        companions: tuple[Companion, ...] = (),
     ) -> tuple[EvaluatedAction, Act]:
         evaluated = self.evaluate(request, principal)
         # Which outcome may produce this Act is Kernel law (kernel.types); the
@@ -210,6 +215,7 @@ class AuthorityService:
             act_type=evaluated.act_type,
             auth_chain=evaluated.auth_chain,
             claimed_when=request.claimed_when,
+            companions=companions,
         )
         if act.hash in cut_before:
             # The Gate returned an occurrence that already held its place: a

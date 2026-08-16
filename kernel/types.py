@@ -32,6 +32,22 @@ class DecisionValidityDisposition(StrEnum):
     COMMIT_REGARDLESS = "COMMIT_REGARDLESS"
 
 
+class CompanionWriter(StrEnum):
+    PRINCIPAL_BINDINGS = "principal_bindings"
+
+
+@dataclass(frozen=True, slots=True)
+class Companion:
+    writer: CompanionWriter
+    row: Mapping[str, CanonValue]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "row", _freeze(self.row))
+
+    def canonical_value(self) -> dict[str, CanonValue]:
+        return {"row": dict(self.row), "writer": self.writer.value}
+
+
 # Which authorization outcome may produce which Act (spec v3 sections 6.1, 8.1).
 #
 # A blanket "lifecycle Acts skip the allow check" would open a door where a deny

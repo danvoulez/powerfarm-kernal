@@ -67,6 +67,18 @@ if "$PGBIN/psql" -h "$TMP_PG" -p "$PORT" -U powerfarm_worker_test -d postgres \
   printf '%s\n' 'worker gained direct ledger insert' >&2
   exit 1
 fi
+if "${PSQL[@]}" -Atc \
+  "select has_function_privilege('powerfarm_worker_test', 'powerfarm_internal.commit_act_internal(text,bytea,text,text,text,jsonb,jsonb,text,jsonb,jsonb,jsonb,text,text,text,text,text)', 'execute')" \
+  | grep -qx t; then
+  printf '%s\n' 'worker can still call bare commit_act_internal' >&2
+  exit 1
+fi
+if "$PGBIN/psql" -h "$TMP_PG" -p "$PORT" -U powerfarm_worker_test -d postgres \
+  -Atc "insert into public.principal_bindings(issuer,subject,identity_hash,linked_act) values('x','y',repeat('a',64),repeat('b',64))" \
+  >/dev/null 2>&1; then
+  printf '%s\n' 'worker retained a direct principal-binding writer' >&2
+  exit 1
+fi
 printf 'migration security invariants passed\n'
 
 # PF-21 at the real admission boundary. conformance/test_pf21.py proves the
@@ -75,6 +87,9 @@ printf 'migration security invariants passed\n'
 # the two layers ever disagree, the disagreement is the finding.
 "${PSQL[@]}" -f conformance/sql/pf21_admission.sql >/dev/null
 printf 'PF-21 admission conformance passed\n'
+
+"${PSQL[@]}" -f conformance/sql/m1_admission.sql >/dev/null
+printf 'M1 transactional admission conformance passed\n'
 
 # PF-07, PF-10, PF-12 and "one consequence per Command" are enforced by triggers,
 # constraints and a partial unique index. Each case below attempts the forbidden
