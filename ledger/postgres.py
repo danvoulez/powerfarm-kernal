@@ -177,6 +177,31 @@ class PostgresStore:
             ).fetchall()
         return tuple(_row_to_act(row) for row in rows)
 
+    def link_principal(self, *, issuer: str, subject: str, identity_hash: str,
+                       linked_act: str) -> None:
+        """Project a PrincipalLinked Act. The partial unique index is the guard:
+        a second live binding for the same principal is refused by the database."""
+        with self._pool.connection() as connection:
+            connection.execute(
+                """
+                insert into public.principal_bindings
+                  (issuer, subject, identity_hash, linked_act)
+                values (%s, %s, %s, %s)
+                on conflict (issuer, subject, linked_act) do nothing
+                """,
+                (issuer, subject, identity_hash, linked_act),
+            )
+
+    def revoke_principal(self, *, issuer: str, subject: str, unlinked_act: str) -> None:
+        with self._pool.connection() as connection:
+            connection.execute(
+                """
+                update public.principal_bindings set unlinked_act = %s
+                where issuer = %s and subject = %s and unlinked_act is null
+                """,
+                (unlinked_act, issuer, subject),
+            )
+
     def get_identity(self, identity_hash: str, cut: frozenset[str]) -> Identity | None:
         with self._pool.connection() as connection:
             identity = connection.execute(
