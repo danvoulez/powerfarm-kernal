@@ -26,6 +26,7 @@ class JWTSettings:
     jwks_url: str
     algorithms: tuple[str, ...]
     resource: str
+    clients: frozenset[str]
 
 
 class SupabaseJWTVerifier(TokenVerifier):
@@ -50,15 +51,23 @@ class SupabaseJWTVerifier(TokenVerifier):
             subject = claims.get("sub")
             if not isinstance(subject, str) or not subject:
                 return None
-            scope_claim = claims.get("scope", "")
-            scopes = scope_claim.split() if isinstance(scope_claim, str) else []
-            audience = claims.get("aud")
-            fallback_client = audience if isinstance(audience, str) else "supabase-client"
-            client_id = claims.get("client_id") or claims.get("azp") or fallback_client
+            # A client identity is presented or it is absent; it is never
+            # derived. The previous fallback manufactured one from `aud`, so a
+            # token carrying no client at all arrived wearing the audience as
+            # its name, and every such token looked like the same caller.
+            client_id = claims.get("client_id") or claims.get("azp")
+            if not isinstance(client_id, str) or not client_id:
+                return None
+            if self._settings.clients and client_id not in self._settings.clients:
+                return None
             return AccessToken(
                 token=token,
-                client_id=str(client_id),
-                scopes=scopes,
+                client_id=client_id,
+                # OAuth scope is not Powerfarm authority and never was: Supabase
+                # issues only openid/email/profile/phone, and authority is a Rule
+                # decision over requester, performer and Context. Nothing here
+                # reads a scope, so nothing can quietly start trusting one.
+                scopes=[],
                 expires_at=int(claims["exp"]),
                 resource=self._settings.resource,
                 subject=subject,
@@ -75,7 +84,7 @@ def current_principal() -> RequestPrincipal | None:
     issuer = (token.claims or {}).get("iss")
     if not isinstance(issuer, str) or token.subject is None:
         return None
-    return RequestPrincipal(issuer, token.subject, token.client_id, tuple(token.scopes))
+    return RequestPrincipal(issuer, token.subject, token.client_id)
 
 
 def auth_from_env() -> tuple[AuthSettings | None, TokenVerifier | None, bool]:
@@ -83,13 +92,17 @@ def auth_from_env() -> tuple[AuthSettings | None, TokenVerifier | None, bool]:
     if not required:
         return None, None, False
     issuer = os.environ.get("POWERFARM_OAUTH_ISSUER")
-    audience = os.environ.get("POWERFARM_OAUTH_AUDIENCE")
     resource = os.environ.get("POWERFARM_MCP_RESOURCE_URL")
-    if not issuer or not audience or not resource:
+    if not issuer or not resource:
         raise RuntimeError(
-            "POWERFARM_OAUTH_ISSUER, POWERFARM_OAUTH_AUDIENCE and "
-            "POWERFARM_MCP_RESOURCE_URL are required when OAuth is enabled"
+            "POWERFARM_OAUTH_ISSUER and POWERFARM_MCP_RESOURCE_URL are required "
+            "when OAuth is enabled"
         )
+    # The audience is the resource this token was minted for, so a token issued
+    # for one Kernel cannot be replayed against another. Supabase mints `aud:
+    # authenticated` by default; a Custom Access Token Hook narrows it to the
+    # resource, which is why this defaults to the resource rather than a name.
+    audience = os.environ.get("POWERFARM_OAUTH_AUDIENCE", resource)
     jwks_url = os.environ.get(
         "POWERFARM_OAUTH_JWKS_URL", f"{issuer.rstrip('/')}/.well-known/jwks.json"
     )
@@ -98,15 +111,17 @@ def auth_from_env() -> tuple[AuthSettings | None, TokenVerifier | None, bool]:
         for item in os.environ.get("POWERFARM_OAUTH_ALGORITHMS", "ES256,RS256").split(",")
         if item.strip()
     )
-    scopes = [
+    clients = frozenset(
         item.strip()
-        for item in os.environ.get("POWERFARM_MCP_SCOPES", "powerfarm.kernel").split(",")
+        for item in os.environ.get("POWERFARM_OAUTH_CLIENTS", "").split(",")
         if item.strip()
-    ]
+    )
     auth = AuthSettings(
         issuer_url=AnyHttpUrl(issuer),
         resource_server_url=AnyHttpUrl(resource),
-        required_scopes=scopes,
+        required_scopes=[],
     )
-    verifier = SupabaseJWTVerifier(JWTSettings(issuer, audience, jwks_url, algorithms, resource))
+    verifier = SupabaseJWTVerifier(
+        JWTSettings(issuer, audience, jwks_url, algorithms, resource, clients)
+    )
     return auth, verifier, True

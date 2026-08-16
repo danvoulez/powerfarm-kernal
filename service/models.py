@@ -47,10 +47,17 @@ def decode_signature(value: str) -> bytes:
 
 @dataclass(frozen=True, slots=True)
 class RequestPrincipal:
+    """Who is presenting this request to the Platform.
+
+    No scopes. An OAuth scope never carried Powerfarm authority: the issuer
+    offers only openid/email/profile/phone, and authority is decided by Rules
+    over requester, performer and Context. Keeping a scope field here would
+    invite someone to consult it one day.
+    """
+
     issuer: str
     subject: str
     client_id: str
-    scopes: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
