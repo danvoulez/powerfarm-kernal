@@ -24,6 +24,13 @@ def test_pack_versions_and_services_are_aligned() -> None:
     }
     env_example = (ROOT / "deploy/macos/powerfarm.env.example").read_text(encoding="utf-8")
     assert "POWERFARM_BIND_HOST=127.0.0.1" in env_example
+    assert manifest["mcp"] == {
+        "protocol_version": "2026-07-28",
+        "transport": "streamable-http",
+        "path": "/mcp",
+        "stateless": True,
+    }
+    assert "POWERFARM_AUTH_REQUIRED=true" in env_example
 
 
 def test_auth_and_storage_contract_is_declarative() -> None:
@@ -82,6 +89,11 @@ def test_migration_history_is_sealed_and_ordered() -> None:
     versions = [path.name.split("_", 1)[0] for path in migrations]
 
     assert (ROOT / "supabase/migrations/.sealed").is_file()
-    assert len(migrations) == 11
+    # Sealed history only ever grows: a later migration may be added, but the
+    # baseline and everything shipped after it may never leave. Immutability of
+    # their *contents* is enforced against origin/main by
+    # scripts/ci/check_migration_history.sh, which a count cannot express.
+    assert migrations[0].name == "20260815060311_powerfarm_baseline.sql"
+    assert len(migrations) >= 12
     assert len(versions) == len(set(versions))
     assert versions == sorted(versions)

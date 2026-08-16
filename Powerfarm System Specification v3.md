@@ -465,7 +465,7 @@ A *history cut* `c` is therefore defined as a **set of Act hashes closed under a
 
 Powerfarm distinguishes at least three temporal ideas, which MUST NOT be conflated:
 
-1. **`act.when`** — the time claimed inside the Act's content (part of its hash; an assertion, not a proof).
+1. **`act.claimed_when`** (`act.when` conceptually) — the time claimed inside the Act's content (part of its hash; an assertion, not a proof). Implementations MUST name this field `claimed_when` in code, APIs, and schema: a bare `when` invites reading it as causal order or as provable knowledge time, which are the two ideas this section exists to keep apart.
 2. **Causal order** — ancestry position; what the Act could have known about (§10.2).
 3. **Provable knowledge time** — when the system can *prove* an object already existed. CAS proves content identity but, alone, cannot prove that content existed at a given date.
 
@@ -705,6 +705,23 @@ Constitutional Rules and definitions (§4.2) are excluded from amendment by any 
 ```
 
 Genesis defines the birth. The six post-Genesis primitives are Registry, Identity, Command, Rules, Act, State.
+
+### 18.1 Stateless MCP Boundary
+
+The first Kernel service boundary uses MCP specification `2026-07-28` over
+stateless Streamable HTTP. MCP is an adapter, not a constitutional primitive:
+
+```text
+MCP -> protocol/mcp -> service -> kernel -> ledger adapter
+```
+
+No authorization or correctness claim may depend on an MCP handshake, transport
+session, session identifier, or process-local continuity. Every governed request
+must carry or resolve the exact inputs needed to read an ancestry-closed cut,
+evaluate Rules, and commit through the narrow transactional Ledger interface.
+Protocol Tools expose Powerfarm semantics rather than raw database or CommitGate
+operations. The Tasks extension remains outside the Kernel until task continuity
+is represented by explicit durable Platform handles.
 
 ---
 

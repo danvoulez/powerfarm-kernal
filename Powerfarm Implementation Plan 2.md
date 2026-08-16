@@ -80,8 +80,11 @@ powerfarm-kernel/
 │   ├── genesis.yaml
 │   └── ceremony.py
 ├── supabase/migrations/     # idempotent schema package
+├── ledger/                  # MemoryLedger + atomic PostgreSQL/Supabase adapter
+├── service/                 # Authority, Identity, Review, Observation, Effects
+├── protocol/mcp/            # MCP 2026-07-28 stateless adapter only
 ├── agent/                   # Command proposal helpers now; ADK later
-├── worker/                  # launchd-run local worker
+├── worker/                  # launchd compatibility entry + signed webhooks
 ├── conformance/             # golden vectors + kernel invariants
 ├── deploy/macos/            # lifecycle, updater, Auth, Keychain, GitHub App
 ├── .github/workflows/       # hosted CI and attested release pipeline
@@ -296,7 +299,8 @@ class PostgresStore:
     def has_act(self, act_hash: str) -> bool: ...
     def put_object(self, object_hash: str, canon: bytes, kind: str) -> None: ...
     def append_act(self, act: Act) -> None: ...
-    def get_act_for_command(self, command_hash: str) -> Act | None: ...
+    def get_act(self, act_hash: str) -> Act | None: ...
+    def get_acts_for_command(self, command_hash: str) -> tuple[Act, ...]: ...
 ```
 
 Implementation rules:
@@ -305,7 +309,13 @@ Implementation rules:
   consequential Acts;
 - `put_object()` and `append_act()` are executed inside one transaction owned by
   `PostgresStore.commit_transaction(...)` or an equivalent context manager;
-- duplicate `command_hash` returns the existing Act, not an error;
+- idempotency is keyed on the Act's own hash, never on `command_hash`: an
+  earlier revision of this section specified `get_act_for_command()` and
+  "duplicate `command_hash` returns the existing Act", which contradicts PF-23
+  and made the §6.1 lifecycle — and this document's own Phase 4 exit test —
+  unrepresentable. `command_hash` is a trajectory index, not an identity;
+- a Command may hold many lifecycle Acts but only one *consequential* Act; the
+  Gate refuses a second one, and the service replays the settled occurrence;
 - duplicate object hash with different bytes/kind is a hard collision error;
 - parent references must exist in `acts`;
 - payload references must exist in `objects`;
@@ -602,13 +612,13 @@ browser clients receive neither that secret nor direct kernel-table grants.
    changed checksum.
 2. **Implemented:** install/update create or reuse the two private Storage buckets through
    the Storage API and emit a local plus remote pack receipt.
-3. **Next:** add `worker/postgres_store.py` as the sole runtime adapter and call the
+3. **Implemented:** `ledger/postgres.py` is the runtime adapter and invokes the
    private database commit gate through a pooled connection.
-4. Replace `/commit` 501 with parsing, JCS verification, authorization, and the
-   `PostgresStore` commit path.
-5. Add an end-to-end smoke path that repeats the same signed Command and proves
-   idempotent replay of the same Act.
-6. Implement projection rebuild/checkpoint workers before domain query APIs.
+4. **Implemented:** MCP `2026-07-28` Streamable HTTP at `/mcp` replaces the raw
+   `/commit` surface with `protocol/mcp -> service -> kernel -> ledger`.
+5. **Implemented:** conformance repeats the same signed Command and proves
+   idempotent replay without an MCP handshake or session identifier.
+6. **Next:** implement projection rebuild/checkpoint workers before domain query APIs.
 7. Add ADK ingestion and trajectory scoring only through their non-authoritative
    staging/projection tables.
 

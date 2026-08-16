@@ -45,8 +45,10 @@ export PF_DRY_RUN=0
 apply_supabase_migrations
 apply_supabase_migrations
 ledger_count="$("${PSQL[@]}" -Atc 'select count(*) from public.powerfarm_schema_migrations')"
-[ "$ledger_count" = "11" ] || {
-  printf 'installer migration ledger has %s entries, expected 11\n' "$ledger_count" >&2
+expected_count="$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l | tr -d ' ')"
+[ "$ledger_count" = "$expected_count" ] || {
+  printf 'installer migration ledger has %s entries, expected %s\n' \
+    "$ledger_count" "$expected_count" >&2
   exit 1
 }
 printf 'installer migration ledger passed\n'

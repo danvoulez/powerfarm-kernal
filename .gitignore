@@ -1,11 +1,13 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+pytest-of-root/
 .mypy_cache/
 .ruff_cache/
 .venv*/
 dist/
 build/
+package-tmp/
 *.egg-info/
 supabase/.temp/
 .DS_Store

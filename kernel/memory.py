@@ -9,7 +9,10 @@ class MemoryStore:
     def __init__(self) -> None:
         self.objects: dict[str, tuple[bytes, str]] = {}
         self.acts: dict[str, Act] = {}
-        self.command_index: dict[str, str] = {}
+        # A Command's lifecycle is many Acts (spec v3 section 6.1), so this index
+        # is one-to-many. It is a trajectory index, not an identity: the Command
+        # is the subject whose trajectory we reconstruct, never the occurrence.
+        self.command_index: dict[str, list[str]] = {}
         self.registry: set[tuple[str, str, str]] = set()
 
     def history_cut(self) -> frozenset[str]:
@@ -36,11 +39,32 @@ class MemoryStore:
         self.objects[object_hash] = (canon, kind)
 
     def append_act(self, act: Act) -> None:
-        if act.hash in self.acts or act.command_hash in self.command_index:
+        # Uniqueness is on the Act's own hash, never on its Command (PF-23).
+        if act.hash in self.acts:
             raise ValueError("Act occurrence must be unique")
         self.acts[act.hash] = act
-        self.command_index[act.command_hash] = act.hash
+        self.command_index.setdefault(act.command_hash, []).append(act.hash)
 
-    def get_act_for_command(self, command_hash: str) -> Act | None:
-        act_hash = self.command_index.get(command_hash)
-        return self.acts.get(act_hash) if act_hash else None
+    def commit_act(self, act: Act, canon: bytes, command_type: str) -> Act:
+        del command_type
+        existing = self.acts.get(act.hash)
+        if existing is not None:
+            return existing
+        old = self.objects.get(act.hash)
+        if old is not None and old != (canon, "act"):
+            raise ValueError("CAS collision")
+        self.objects[act.hash] = (canon, "act")
+        try:
+            self.append_act(act)
+        except Exception:
+            if old is None:
+                self.objects.pop(act.hash, None)
+            raise
+        return act
+
+    def get_act(self, act_hash: str) -> Act | None:
+        return self.acts.get(act_hash)
+
+    def get_acts_for_command(self, command_hash: str) -> tuple[Act, ...]:
+        """Every Act referencing this Command -- its whole lifecycle (PF-15)."""
+        return tuple(self.acts[h] for h in self.command_index.get(command_hash, ()))

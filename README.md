@@ -1,7 +1,8 @@
 # Powerfarm Kernel
 
 This repository implements the constitutional core described by **Powerfarm System
-Specification v3.2** and the accompanying implementation plan. The current foundation includes:
+Specification v3.2** and exposes it through the stateless **MCP 2026-07-28** boundary
+identified in the project context dump. The current foundation includes:
 
 - deterministic JCS (RFC 8785) and SHA-256 domain-separated content identities,
   pinned byte-exact by the golden vector suite in conformance/golden-vectors/;
@@ -10,8 +11,11 @@ Specification v3.2** and the accompanying implementation plan. The current found
 - one signature-verifying, cut-aware, idempotent Act commit gate;
 - deterministic projector contracts and disposable materializations;
 - a PostgreSQL genesis schema with an append-only database backstop;
-- a reproducible Genesis ceremony and agent-side signed Command proposals; and
-- executable conformance coverage for the kernel invariants implemented here.
+- a reproducible Genesis ceremony and agent-side signed Command proposals;
+- executable conformance coverage for the kernel invariants implemented here;
+- a protocol-neutral service layer and PostgreSQL ledger adapter; and
+- a stateless Streamable HTTP MCP server with semantic Tools, content-addressed
+  Resources, OAuth protected-resource metadata, and no protocol sessions.
 
 There is one Genesis implementation: the version-bound configuration in
 `genesis/genesis.yaml` and the deterministic ceremony in `genesis/ceremony.py`.
@@ -25,7 +29,16 @@ pytest
 ruff check .
 mypy
 python -m genesis.ceremony
+python -m protocol.mcp.server
 ```
+
+The MCP endpoint is `POST /mcp`; health remains `GET /health`. Local development
+may omit OAuth, but production should set `POWERFARM_AUTH_REQUIRED=true` and the
+issuer, audience, JWKS, resource URL, scope and root institutional Identity values
+shown in `deploy/macos/powerfarm.env.example`.
+
+The adapter layering, Tool contracts, Resources, and deliberate Tasks policy are
+documented in [`docs/MCP_STATELESS_2026-07-28.md`](docs/MCP_STATELESS_2026-07-28.md).
 
 ## macOS LAB Install
 
@@ -81,12 +94,13 @@ creation and installation consent pages. Its signed webhook only enters the
 operational inbox; it has no database credential and no Act write authority.
 
 Agent tools must return Command proposals. They must not connect to the database. Production
-database adapters must expose the narrow `kernel.commit.Store` contract and make
-`put_object` plus `append_act` one transaction; `CommitGate` remains the only history writer.
+database adapters must expose the narrow `kernel.commit.Store` contract and implement
+`commit_act` through one atomic transaction; `CommitGate` remains the only history writer.
 
 ## Deliberate boundaries
 
-The ADK runtime, Supabase Edge transport, external-effect dispatcher, and deployment manifests
-remain integrations over this kernel. They must be added phase-by-phase without introducing a
-second write path. The included in-memory adapter is for ceremony/conformance work, not a source
-of production truth.
+The ADK runtime, Supabase Edge transport, and external-effect dispatcher remain
+integrations over this kernel. They must be added phase-by-phase without introducing
+a second write path. The included in-memory adapter is for ceremony/conformance and
+explicit local development, not a source of production truth. MCP Tasks are not
+advertised until durable Platform/ADK task handles exist.

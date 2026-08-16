@@ -4,10 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "powerfarm-kernel"
-version = "0.1.0"
-description = "A small constitutional kernel for governed, append-only history"
+version = "0.2.0"
+description = "Stateless constitutional compute over append-only Powerfarm ledgers"
 requires-python = ">=3.12"
-dependencies = ["cryptography>=43", "rfc8785>=0.1"]
+dependencies = [
+    "cryptography>=43",
+    "mcp==2.0.0",
+    "psycopg[binary,pool]>=3.2,<4",
+    "PyJWT[crypto]>=2.10,<3",
+    "rfc8785>=0.1",
+]
+
+[project.scripts]
+powerfarm-kernel-mcp = "protocol.mcp.server:main"
 
 [project.optional-dependencies]
 dev = [
@@ -19,7 +28,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["kernel*", "genesis*", "worker*", "agent*"]
+include = ["kernel*", "genesis*", "worker*", "agent*", "ledger*", "service*", "protocol*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "conformance"]
@@ -30,4 +39,4 @@ line-length = 100
 
 [tool.mypy]
 strict = true
-packages = ["kernel", "genesis", "worker", "agent"]
+packages = ["kernel", "genesis", "worker", "agent", "ledger", "service", "protocol"]
