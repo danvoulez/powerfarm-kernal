@@ -6,7 +6,6 @@ import base64
 import json
 from collections.abc import Mapping
 from typing import Any, cast
-from uuid import UUID
 
 from psycopg import Connection
 from psycopg.rows import dict_row
@@ -230,19 +229,23 @@ class PostgresStore:
         return tuple(_row_to_act(row) for row in reversed(rows))
 
     def resolve_principal(self, issuer: str, subject: str) -> str | None:
-        del issuer
-        try:
-            user_id = UUID(subject)
-        except ValueError:
+        """The Identity a credential principal presently controls, or nothing.
+
+        Both halves are load-bearing: a subject is only meaningful under the
+        issuer that asserted it, and it is an opaque string, not this
+        authorization server's user id. Revoked bindings stay in history and are
+        excluded here by `unlinked_act is null`, so a stale token that still
+        parses resolves to nothing.
+        """
+        if not issuer or not subject:
             return None
         with self._pool.connection() as connection:
             row = connection.execute(
                 """
-                select identity_hash from public.identity_links
-                where supabase_user = %s and unlinked_act is null
-                order by linked_act desc limit 1
+                select identity_hash from public.principal_bindings
+                where issuer = %s and subject = %s and unlinked_act is null
                 """,
-                (user_id,),
+                (issuer, subject),
             ).fetchone()
         return str(row["identity_hash"]) if row is not None else None
 

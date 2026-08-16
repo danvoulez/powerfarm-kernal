@@ -111,7 +111,7 @@ Six constitutional tables remain the minimum:
 
 Auth boundary/projection tables live beside them:
 
-- `identity_links`
+- `principal_bindings` (issuer + subject -> Identity; replaced `identity_links`)
 - `oauth_applications`
 - `authorization_proofs`
 
@@ -223,7 +223,7 @@ surface made from:
 - `registry`: versioned vocabulary for command types, act types, relation types,
   context types, rules, and projectors;
 - `identities` and `identity_keys`: actor identity and key history;
-- auth boundary/projection tables such as `identity_links`, `oauth_applications`,
+- auth boundary/projection tables such as `principal_bindings`, `oauth_applications`,
   and `authorization_proofs`.
 
 The Postgres ledger above is the sole persisted history surface.
