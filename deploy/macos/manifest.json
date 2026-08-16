@@ -1,6 +1,6 @@
 {
   "name": "powerfarm-macos-lab",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "platform": "macos-launchd",
   "services": [
     "com.powerfarm.worker",
@@ -23,6 +23,12 @@
       "powerfarm-ledger",
       "powerfarm-packages"
     ]
+  },
+  "mcp": {
+    "protocol_version": "2026-07-28",
+    "transport": "streamable-http",
+    "path": "/mcp",
+    "stateless": true
   },
   "release": {
     "repository": "danvoulez/powerfarm-kernal",

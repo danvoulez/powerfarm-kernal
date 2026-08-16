@@ -27,9 +27,10 @@ def setup_case() -> tuple[MemoryStore, Identity, object, Context, object]:
     store = MemoryStore()
     genesis = "0" * 64
     store.acts[genesis] = Act(genesis, "GenesisClosed", genesis, (), frozenset(), "genesis-command",
-                              (), frozenset(), genesis, genesis)
+                              (), frozenset(), (), genesis, genesis)
     store.register("command_type", "CreateThing", genesis)
     store.register("act_type", "ThingCreated", genesis)
+    store.register("context_type", "request.origin", genesis)
     payload = {"name": "one"}
     payload_hash = object_hash("payload", payload)
     store.put_object(payload_hash, canonicalize(payload), "payload")
@@ -38,7 +39,9 @@ def setup_case() -> tuple[MemoryStore, Identity, object, Context, object]:
     identity = Identity(object_hash("identity", base64.urlsafe_b64encode(public).decode()), "human", public)
     command = propose_command("CreateThing", identity.hash, payload_hash, (genesis,), "n-1", private)
     context = Context({"request.origin": "test"}, {"request.origin": "origin-v1"})
-    decision = authorize(identity, command, context, store.history_cut(), frozenset({genesis}), (Allow(),))
+    rule = Allow(hash=object_hash("rule", {"name": "test.allow", "version": 1}))
+    store.register("rule", rule.hash, genesis)
+    decision = authorize(identity, command, context, store.history_cut(), frozenset({genesis}), (rule,))
     return store, identity, command, context, decision
 
 

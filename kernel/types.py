@@ -40,9 +40,10 @@ class Context:
 
     @property
     def hash(self) -> str:
-        return object_hash(
-            "context", {"types": dict(self.types), "values": dict(self.values)}
-        )
+        return object_hash("context", self.canonical_value())
+
+    def canonical_value(self) -> dict[str, CanonValue]:
+        return {"types": dict(self.types), "values": dict(self.values)}
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +83,7 @@ class Act:
     command_hash: str
     auth_chain: tuple[str, ...]
     registry_cut: frozenset[str]
+    rule_hashes: tuple[str, ...]
     context_hash: str
     payload_hash: str
     claimed_when: str | None = None

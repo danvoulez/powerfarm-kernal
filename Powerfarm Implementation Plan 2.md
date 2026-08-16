@@ -80,8 +80,11 @@ powerfarm-kernel/
 │   ├── genesis.yaml
 │   └── ceremony.py
 ├── supabase/migrations/     # idempotent schema package
+├── ledger/                  # MemoryLedger + atomic PostgreSQL/Supabase adapter
+├── service/                 # Authority, Identity, Review, Observation, Effects
+├── protocol/mcp/            # MCP 2026-07-28 stateless adapter only
 ├── agent/                   # Command proposal helpers now; ADK later
-├── worker/                  # launchd-run local worker
+├── worker/                  # launchd compatibility entry + signed webhooks
 ├── conformance/             # golden vectors + kernel invariants
 ├── deploy/macos/            # lifecycle, updater, Auth, Keychain, GitHub App
 ├── .github/workflows/       # hosted CI and attested release pipeline
@@ -602,13 +605,13 @@ browser clients receive neither that secret nor direct kernel-table grants.
    changed checksum.
 2. **Implemented:** install/update create or reuse the two private Storage buckets through
    the Storage API and emit a local plus remote pack receipt.
-3. **Next:** add `worker/postgres_store.py` as the sole runtime adapter and call the
+3. **Implemented:** `ledger/postgres.py` is the runtime adapter and invokes the
    private database commit gate through a pooled connection.
-4. Replace `/commit` 501 with parsing, JCS verification, authorization, and the
-   `PostgresStore` commit path.
-5. Add an end-to-end smoke path that repeats the same signed Command and proves
-   idempotent replay of the same Act.
-6. Implement projection rebuild/checkpoint workers before domain query APIs.
+4. **Implemented:** MCP `2026-07-28` Streamable HTTP at `/mcp` replaces the raw
+   `/commit` surface with `protocol/mcp -> service -> kernel -> ledger`.
+5. **Implemented:** conformance repeats the same signed Command and proves
+   idempotent replay without an MCP handshake or session identifier.
+6. **Next:** implement projection rebuild/checkpoint workers before domain query APIs.
 7. Add ADK ingestion and trajectory scoring only through their non-authoritative
    staging/projection tables.
 

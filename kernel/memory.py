@@ -41,6 +41,25 @@ class MemoryStore:
         self.acts[act.hash] = act
         self.command_index[act.command_hash] = act.hash
 
+    def commit_act(self, act: Act, canon: bytes, command_type: str) -> Act:
+        del command_type
+        existing = self.get_act_for_command(act.command_hash)
+        if existing is not None:
+            if existing.hash != act.hash:
+                raise ValueError("command hash already committed to a different Act")
+            return existing
+        old = self.objects.get(act.hash)
+        if old is not None and old != (canon, "act"):
+            raise ValueError("CAS collision")
+        self.objects[act.hash] = (canon, "act")
+        try:
+            self.append_act(act)
+        except Exception:
+            if old is None:
+                self.objects.pop(act.hash, None)
+            raise
+        return act
+
     def get_act_for_command(self, command_hash: str) -> Act | None:
         act_hash = self.command_index.get(command_hash)
         return self.acts.get(act_hash) if act_hash else None

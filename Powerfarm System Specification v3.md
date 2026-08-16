@@ -706,6 +706,23 @@ Constitutional Rules and definitions (§4.2) are excluded from amendment by any 
 
 Genesis defines the birth. The six post-Genesis primitives are Registry, Identity, Command, Rules, Act, State.
 
+### 18.1 Stateless MCP Boundary
+
+The first Kernel service boundary uses MCP specification `2026-07-28` over
+stateless Streamable HTTP. MCP is an adapter, not a constitutional primitive:
+
+```text
+MCP -> protocol/mcp -> service -> kernel -> ledger adapter
+```
+
+No authorization or correctness claim may depend on an MCP handshake, transport
+session, session identifier, or process-local continuity. Every governed request
+must carry or resolve the exact inputs needed to read an ancestry-closed cut,
+evaluate Rules, and commit through the narrow transactional Ledger interface.
+Protocol Tools expose Powerfarm semantics rather than raw database or CommitGate
+operations. The Tasks extension remains outside the Kernel until task continuity
+is represented by explicit durable Platform handles.
+
 ---
 
 ## 19. Powerfarm Platform

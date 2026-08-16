@@ -19,8 +19,11 @@ class RuleResult:
 
 
 class Rule(Protocol):
-    hash: str
-    context_keys: frozenset[str]
+    @property
+    def hash(self) -> str: ...
+
+    @property
+    def context_keys(self) -> frozenset[str]: ...
 
     def evaluate(self, identity: Identity, command: Command, context: Context,
                  history_cut: frozenset[str]) -> RuleResult: ...
@@ -47,4 +50,3 @@ def authorize(identity: Identity, command: Command, context: Context,
         outcome = DecisionKind.ALLOW
     return Decision(outcome, history_cut, tuple(rule.hash for rule in rules), registry_cut,
                     "; ".join(item.reason for item in outcomes))
-
