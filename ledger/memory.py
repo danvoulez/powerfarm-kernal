@@ -37,11 +37,13 @@ class MemoryLedger(MemoryStore):
         version: int = 1,
         constitutional: bool = False,
         entry_hash: str | None = None,
-    ) -> None:
-        super().register(kind, name, born_at)
+    ) -> str:
         value: dict[str, CanonValue] = {"kind": kind, "name": name, "version": version}
         definition_hash = entry_hash or (
             name if kind == "rule" and len(name) == 64 else object_hash("registry", value)
+        )
+        super().register(
+            kind, name, born_at, version=version, entry_hash=definition_hash
         )
         self._registry_metadata[(kind, name, born_at)] = RegistryEntry(
             hash=definition_hash,
@@ -52,11 +54,23 @@ class MemoryLedger(MemoryStore):
             constitutional=constitutional,
             definition=value,
         )
+        return definition_hash
 
     def registered(self, kind: str, name: str, cut: frozenset[str]) -> bool:
         return any(
             entry.kind == kind
             and (entry.name == name or entry.hash == name)
+            and entry.born_at in cut
+            for entry in self._registry_metadata.values()
+        )
+
+    def definition_registered(
+        self, kind: str, name: str, definition_hash: str, cut: frozenset[str]
+    ) -> bool:
+        return any(
+            entry.kind == kind
+            and entry.name == name
+            and entry.hash == definition_hash
             and entry.born_at in cut
             for entry in self._registry_metadata.values()
         )

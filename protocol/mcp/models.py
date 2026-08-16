@@ -87,6 +87,8 @@ class ActOutput(BaseModel):
     rule_hashes: list[str]
     context_hash: str
     payload_hash: str
+    validity_rule_hash: str
+    validity_disposition: str
     claimed_when: str | None
 
 

@@ -31,17 +31,14 @@ create schema auth;
 create table auth.users (id uuid primary key);
 SQL
 
-for pass in 1 2; do
-  for migration in supabase/migrations/*.sql; do
-    "${PSQL[@]}" -f "$migration" >/dev/null
-  done
-  printf 'migration pass %s complete\n' "$pass"
-done
-
 export DATABASE_URL="host=$TMP_PG port=$PORT user=postgres dbname=postgres"
 export PF_DRY_RUN=0
 # shellcheck source=../../deploy/macos/lib/common.sh
 . deploy/macos/lib/common.sh
+# Ordered migrations are applied once.  Idempotency belongs to the checksum
+# ledger: a later schema migration may intentionally make an earlier migration
+# inapplicable to the evolved schema, so replaying every historical file is not
+# a valid production operation.
 apply_supabase_migrations
 apply_supabase_migrations
 ledger_count="$("${PSQL[@]}" -Atc 'select count(*) from public.powerfarm_schema_migrations')"

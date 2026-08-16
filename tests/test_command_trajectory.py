@@ -9,12 +9,20 @@ from agent.tools import propose_command
 from kernel.canon import canonicalize, object_hash
 from kernel.commit import CommitGate
 from kernel.rules import RuleResult, authorize
-from kernel.types import Act, Context, DecisionKind, Identity
+from kernel.types import Act, Context, DecisionKind, DecisionValidityDisposition, Identity
+from kernel.validity import DECLARED_DECISION_CUT_RULE
 from ledger.memory import MemoryLedger
 from service.lifecycle import LifecycleService
 from service.models import DERIVED_CONTEXT_KEYS
 
 GENESIS = "0" * 64
+VALIDITY_RULE_HASH = object_hash(
+    "rule", {"name": DECLARED_DECISION_CUT_RULE, "version": 1}
+)
+
+
+def context_type_hash(name: str) -> str:
+    return object_hash("registry", {"kind": "context_type", "name": name, "version": 1})
 
 
 class Rule:
@@ -31,8 +39,11 @@ class Rule:
 
 def build() -> tuple[MemoryLedger, Identity, Context, Ed25519PrivateKey]:
     ledger = MemoryLedger()
-    ledger.acts[GENESIS] = Act(GENESIS, "GenesisClosed", GENESIS, (), frozenset(),
-                               "genesis-command", (), frozenset(), (), GENESIS, GENESIS)
+    ledger.acts[GENESIS] = Act(
+        GENESIS, "GenesisClosed", GENESIS, (), frozenset(), "genesis-command",
+        (), frozenset(), (), GENESIS, GENESIS, VALIDITY_RULE_HASH,
+        DecisionValidityDisposition.VALID,
+    )
     ledger.command_index["genesis-command"] = [GENESIS]
     private = Ed25519PrivateKey.generate()
     public = private.public_key().public_bytes(
@@ -45,11 +56,21 @@ def build() -> tuple[MemoryLedger, Identity, Context, Ed25519PrivateKey]:
     for name in ("ThingCreated", "ReviewRequested", "AuthorizationReviewed",
                  "AuthorizationResolved"):
         ledger.register("act_type", name, GENESIS)
-    ledger.register("context_type", "request.origin", GENESIS)
+    ledger.register(
+        "context_type", "request.origin", GENESIS,
+        entry_hash=context_type_hash("request.origin"),
+    )
     for derived in DERIVED_CONTEXT_KEYS:
-        ledger.register("context_type", derived, GENESIS)
+        ledger.register(
+            "context_type", derived, GENESIS, entry_hash=context_type_hash(derived)
+        )
     ledger.register("rule", "test.rule", GENESIS, entry_hash=Rule.hash)
-    context = Context({"request.origin": "test"}, {"request.origin": "origin-v1"})
+    ledger.register(
+        "rule", DECLARED_DECISION_CUT_RULE, GENESIS, entry_hash=VALIDITY_RULE_HASH
+    )
+    context = Context(
+        {"request.origin": "test"}, {"request.origin": context_type_hash("request.origin")}
+    )
     return ledger, identity, context, private
 
 

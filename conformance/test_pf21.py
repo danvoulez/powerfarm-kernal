@@ -33,11 +33,19 @@ from kernel.types import (
     Context,
     Decision,
     DecisionKind,
+    DecisionValidityDisposition,
     Identity,
 )
+from kernel.validity import DECLARED_DECISION_CUT_RULE
 
 GENESIS = "0" * 64
 LATER = "1" * 64
+CONTEXT_TYPE_HASH = object_hash(
+    "registry", {"kind": "context_type", "name": "request.origin", "version": 1}
+)
+VALIDITY_RULE_HASH = object_hash(
+    "rule", {"name": DECLARED_DECISION_CUT_RULE, "version": 1}
+)
 
 
 @dataclass(frozen=True)
@@ -70,13 +78,21 @@ class Fixture:
 def build(nonce: str = "n-1") -> Fixture:
     """A universe holding one closed Genesis Act and the vocabulary a commit needs."""
     store = MemoryStore()
-    store.acts[GENESIS] = Act(GENESIS, "GenesisClosed", GENESIS, (), frozenset(),
-                              "genesis-command", (), frozenset(), (), GENESIS, GENESIS)
+    store.acts[GENESIS] = Act(
+        GENESIS, "GenesisClosed", GENESIS, (), frozenset(), "genesis-command",
+        (), frozenset(), (), GENESIS, GENESIS, VALIDITY_RULE_HASH,
+        DecisionValidityDisposition.VALID,
+    )
     store.register("command_type", "CreateThing", GENESIS)
     store.register("act_type", "ThingCreated", GENESIS)
     for lifecycle_type in LIFECYCLE_ACT_TYPES:
         store.register("act_type", lifecycle_type, GENESIS)
-    store.register("context_type", "request.origin", GENESIS)
+    store.register(
+        "context_type", "request.origin", GENESIS, entry_hash=CONTEXT_TYPE_HASH
+    )
+    store.register(
+        "rule", DECLARED_DECISION_CUT_RULE, GENESIS, entry_hash=VALIDITY_RULE_HASH
+    )
 
     payload = {"name": "one"}
     payload_hash = object_hash("payload", payload)
@@ -89,7 +105,9 @@ def build(nonce: str = "n-1") -> Fixture:
         object_hash("identity", base64.urlsafe_b64encode(public).decode()), "human", public)
     command = propose_command("CreateThing", identity.hash, payload_hash, (GENESIS,),
                               nonce, private)
-    context = Context({"request.origin": "test"}, {"request.origin": "origin-v1"})
+    context = Context(
+        {"request.origin": "test"}, {"request.origin": CONTEXT_TYPE_HASH}
+    )
     return Fixture(store, identity, command, context, private)
 
 
@@ -104,8 +122,11 @@ def decision(*rule_hashes: str, registry_cut: frozenset[str] | None = None,
 
 def advance_history(store: MemoryStore) -> None:
     """Land a second Act so the Registry can grow without the decision cut moving."""
-    store.acts[LATER] = Act(LATER, "ThingCreated", GENESIS, (GENESIS,), frozenset({GENESIS}),
-                            "other-command", (), frozenset({GENESIS}), (), GENESIS, GENESIS)
+    store.acts[LATER] = Act(
+        LATER, "ThingCreated", GENESIS, (GENESIS,), frozenset({GENESIS}),
+        "other-command", (), frozenset({GENESIS}), (), GENESIS, GENESIS,
+        VALIDITY_RULE_HASH, DecisionValidityDisposition.VALID,
+    )
 
 
 # --- the matrix ------------------------------------------------------------
@@ -178,6 +199,31 @@ def test_right_name_wrong_hash_is_refused() -> None:
     with pytest.raises(CommitError, match="unregistered Rule"):
         CommitGate(f.store).commit(
             f.identity, f.command, decision(impostor.hash), f.context, act_type="ThingCreated")
+
+
+def test_context_key_bound_to_the_wrong_definition_hash_is_refused() -> None:
+    """A registered hash for another key cannot reinterpret this Context slot."""
+    f = build()
+    rule = NamedRule("test.allow", 1)
+    f.store.register("rule", rule.hash, GENESIS)
+    other_hash = object_hash(
+        "registry", {"kind": "context_type", "name": "request.other", "version": 1}
+    )
+    f.store.register(
+        "context_type", "request.other", GENESIS, entry_hash=other_hash
+    )
+    wrong_context = Context(
+        {"request.origin": "test"}, {"request.origin": other_hash}
+    )
+
+    with pytest.raises(CommitError, match="unregistered Context type"):
+        CommitGate(f.store).commit(
+            f.identity,
+            f.command,
+            decision(rule.hash),
+            wrong_context,
+            act_type="ThingCreated",
+        )
 
 
 def test_definition_born_after_the_declared_cut_is_refused() -> None:

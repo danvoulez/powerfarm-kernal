@@ -94,7 +94,11 @@ class ActionRequest:
             signature=decode_signature(self.signature),
         )
 
-    def context(self, derived: Mapping[str, str] | None = None) -> Context:
+    def context(
+        self,
+        derived: Mapping[str, str] | None = None,
+        derived_types: Mapping[str, str] | None = None,
+    ) -> Context:
         """Client Context, with the Kernel-derived keys layered on top.
 
         The derived keys are not merged politely -- a request that supplies one
@@ -102,8 +106,16 @@ class ActionRequest:
         assert it, so the only way it enters history is by being resolved from a
         verified token through `principal_bindings`.
         """
+        for key, definition_hash in self.context_types.items():
+            require_hash(definition_hash, f"context_types[{key!r}]")
         if derived is None:
+            if derived_types is not None:
+                raise ValidationError("derived Context types require derived values")
             return Context(self.context_values, self.context_types)
+        if derived_types is None or set(derived) != set(derived_types):
+            raise ValidationError("every derived Context value requires an exact definition hash")
+        for key, definition_hash in derived_types.items():
+            require_hash(definition_hash, f"derived_context_types[{key!r}]")
         supplied = DERIVED_CONTEXT_KEYS & self.context_values.keys()
         if supplied:
             raise ValidationError(
@@ -112,7 +124,7 @@ class ActionRequest:
             )
         return Context(
             {**self.context_values, **derived},
-            {**self.context_types, **{key: key for key in derived}},
+            {**self.context_types, **derived_types},
         )
 
 
@@ -156,5 +168,7 @@ def act_to_dict(act: Act) -> dict[str, object]:
         "rule_hashes": list(act.rule_hashes),
         "context_hash": act.context_hash,
         "payload_hash": act.payload_hash,
+        "validity_rule_hash": act.validity_rule_hash,
+        "validity_disposition": act.validity_disposition.value,
         "claimed_when": act.claimed_when,
     }

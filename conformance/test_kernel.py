@@ -12,7 +12,22 @@ from kernel.canon import canonicalize, object_hash
 from kernel.commit import CommitError, CommitGate
 from kernel.memory import MemoryStore
 from kernel.rules import RuleResult, authorize
-from kernel.types import LIFECYCLE_ACT_TYPES, Act, Context, DecisionKind, Identity
+from kernel.types import (
+    LIFECYCLE_ACT_TYPES,
+    Act,
+    Context,
+    DecisionKind,
+    DecisionValidityDisposition,
+    Identity,
+)
+from kernel.validity import DECLARED_DECISION_CUT_RULE
+
+CONTEXT_TYPE_HASH = object_hash(
+    "registry", {"kind": "context_type", "name": "request.origin", "version": 1}
+)
+VALIDITY_RULE_HASH = object_hash(
+    "rule", {"name": DECLARED_DECISION_CUT_RULE, "version": 1}
+)
 
 
 @dataclass(frozen=True)
@@ -41,14 +56,22 @@ class Outcome:
 def setup_case() -> tuple[MemoryStore, Identity, object, Context, object, Ed25519PrivateKey]:
     store = MemoryStore()
     genesis = "0" * 64
-    store.acts[genesis] = Act(genesis, "GenesisClosed", genesis, (), frozenset(), "genesis-command",
-                              (), frozenset(), (), genesis, genesis)
+    store.acts[genesis] = Act(
+        genesis, "GenesisClosed", genesis, (), frozenset(), "genesis-command",
+        (), frozenset(), (), genesis, genesis, VALIDITY_RULE_HASH,
+        DecisionValidityDisposition.VALID,
+    )
     store.register("command_type", "CreateThing", genesis)
     store.register("command_type", "ReviewAuthorization", genesis)
     store.register("act_type", "ThingCreated", genesis)
     for lifecycle_type in LIFECYCLE_ACT_TYPES:
         store.register("act_type", lifecycle_type, genesis)
-    store.register("context_type", "request.origin", genesis)
+    store.register(
+        "context_type", "request.origin", genesis, entry_hash=CONTEXT_TYPE_HASH
+    )
+    store.register(
+        "rule", DECLARED_DECISION_CUT_RULE, genesis, entry_hash=VALIDITY_RULE_HASH
+    )
     payload = {"name": "one"}
     payload_hash = object_hash("payload", payload)
     store.put_object(payload_hash, canonicalize(payload), "payload")
@@ -56,7 +79,9 @@ def setup_case() -> tuple[MemoryStore, Identity, object, Context, object, Ed2551
     public = private.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
     identity = Identity(object_hash("identity", base64.urlsafe_b64encode(public).decode()), "human", public)
     command = propose_command("CreateThing", identity.hash, payload_hash, (genesis,), "n-1", private)
-    context = Context({"request.origin": "test"}, {"request.origin": "origin-v1"})
+    context = Context(
+        {"request.origin": "test"}, {"request.origin": CONTEXT_TYPE_HASH}
+    )
     rule = Allow(hash=object_hash("rule", {"name": "test.allow", "version": 1}))
     store.register("rule", rule.hash, genesis)
     decision = authorize(identity, command, context, store.history_cut(), frozenset({genesis}), (rule,))
@@ -351,10 +376,15 @@ def test_claimed_when_is_part_of_the_act_identity() -> None:
     """
     store, identity, command, context, decision, _private = setup_case()
     canonical = CommitGate._canonical_value
-    bare = canonical(identity, command, decision, context, "ThingCreated", (), None)
+    bare = canonical(
+        identity, command, decision, context, "ThingCreated", (),
+        VALIDITY_RULE_HASH, DecisionValidityDisposition.VALID.value, None,
+    )
     at_nine = canonical(identity, command, decision, context, "ThingCreated", (),
+                        VALIDITY_RULE_HASH, DecisionValidityDisposition.VALID.value,
                         "2026-08-16T09:00:00Z")
     at_ten = canonical(identity, command, decision, context, "ThingCreated", (),
+                       VALIDITY_RULE_HASH, DecisionValidityDisposition.VALID.value,
                        "2026-08-16T10:00:00Z")
 
     assert "claimed_when" in bare, "the field must be inside the hashed content, not beside it"

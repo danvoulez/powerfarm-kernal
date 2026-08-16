@@ -24,6 +24,8 @@ insert into public.objects (hash, canon, kind) values
   (repeat('ad', 32), '\xad', 'context'),
   (repeat('ae', 32), '\xae', 'payload'),
   (repeat('af', 32), '\xaf', 'rule'),
+  (repeat('a0', 32), '\xa0', 'rule'),
+  (repeat('b0', 32), '\xb0', 'relation_type'),
   (repeat('ba', 32), '\xba', 'command_type'),
   (repeat('bc', 32), '\xbc', 'act_type'),
   (repeat('bf', 32), '\xbf', 'relation'),
@@ -34,11 +36,11 @@ on conflict (hash) do nothing;
 insert into public.acts
   (hash, act_type, command_type, identity_hash, parents, decision_cut,
    command_hash, auth_chain, registry_cut, rule_hashes, context_hash,
-   payload_hash, claimed_when)
+   payload_hash, validity_rule_hash, validity_disposition, claimed_when)
 values
   (repeat('ab', 32), 'GenesisClosed', 'Genesis', repeat('ac', 32), '[]'::jsonb,
    '[]'::jsonb, repeat('ca', 32), '[]'::jsonb, '[]'::jsonb, '[]'::jsonb,
-   repeat('ad', 32), repeat('ae', 32), null)
+   repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null)
 on conflict (hash) do nothing;
 
 insert into public.identities (hash, kind, created_act)
@@ -49,13 +51,15 @@ insert into public.registry (hash, kind, name, version, born_at, constitutional)
 values
   (repeat('ba', 32), 'command_type', 'InvariantProbe', 1, repeat('ab', 32), false),
   (repeat('bc', 32), 'act_type',     'ProbeHappened',  1, repeat('ab', 32), false),
-  (repeat('af', 32), 'rule',         'probe.allow',    1, repeat('ab', 32), false)
+  (repeat('af', 32), 'rule',         'probe.allow',    1, repeat('ab', 32), false),
+  (repeat('a0', 32), 'rule', 'declared-decision-cut', 2, repeat('ab', 32), true),
+  (repeat('b0', 32), 'relation_type', 'derived_from', 1, repeat('ab', 32), false)
 on conflict (hash) do nothing;
 
 -- The Relation carries its own content hash: `Relation.hash` already exists in
 -- kernel/types.py even though nothing writes this table yet (Phase 0a).
-insert into public.relations (hash, from_hash, to_hash, relation_type, payload_hash)
-values (repeat('bf', 32), repeat('ad', 32), repeat('ae', 32), 'derived_from', null)
+insert into public.relations (hash, from_hash, to_hash, relation_type_hash, payload_hash)
+values (repeat('bf', 32), repeat('ad', 32), repeat('ae', 32), repeat('b0', 32), null)
 on conflict (hash) do nothing;
 
 commit;
@@ -88,7 +92,7 @@ select pg_temp.must_refuse('DELETE from acts', $q$
 $q$);
 
 select pg_temp.must_refuse('UPDATE on relations', $q$
-  update public.relations set relation_type = 'observed_from'
+  update public.relations set relation_type_hash = repeat('b1', 32)
    where from_hash = repeat('ad', 32)
 $q$);
 
@@ -117,7 +121,7 @@ select pg_temp.must_refuse('Act declaring itself as parent', $q$
     repeat('cb', 32), '[]'::jsonb,
     to_jsonb(array[repeat('ab', 32)]),
     to_jsonb(array[repeat('af', 32)]),
-    repeat('ad', 32), repeat('ae', 32), null)
+    repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null)
 $q$);
 
 select pg_temp.must_refuse('Act naming a parent that does not exist', $q$
@@ -128,7 +132,7 @@ select pg_temp.must_refuse('Act naming a parent that does not exist', $q$
     repeat('cb', 32), '[]'::jsonb,
     to_jsonb(array[repeat('ab', 32)]),
     to_jsonb(array[repeat('af', 32)]),
-    repeat('ad', 32), repeat('ae', 32), null)
+    repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null)
 $q$);
 
 
@@ -150,11 +154,11 @@ begin
     insert into public.acts
       (hash, act_type, command_type, identity_hash, parents, decision_cut,
        command_hash, auth_chain, registry_cut, rule_hashes, context_hash,
-       payload_hash, claimed_when)
+       payload_hash, validity_rule_hash, validity_disposition, claimed_when)
     values
       (repeat('be', 32), 'ProbeHappened', 'InvariantProbe', repeat('ac', 32),
        '[]'::jsonb, '[]'::jsonb, repeat('cc', 32), '[]'::jsonb, '[]'::jsonb,
-       '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), null)
+       '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null)
     returning seq into burned;
     raise exception 'rollback on purpose';
   exception when others then
@@ -169,11 +173,11 @@ begin
   insert into public.acts
     (hash, act_type, command_type, identity_hash, parents, decision_cut,
      command_hash, auth_chain, registry_cut, rule_hashes, context_hash,
-     payload_hash, claimed_when)
+     payload_hash, validity_rule_hash, validity_disposition, claimed_when)
   values
     (repeat('be', 32), 'ProbeHappened', 'InvariantProbe', repeat('ac', 32),
      '[]'::jsonb, '[]'::jsonb, repeat('cc', 32), '[]'::jsonb, '[]'::jsonb,
-     '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), null)
+     '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null)
   returning seq into landed;
 
   if landed <= burned then
@@ -210,17 +214,17 @@ on conflict (hash) do nothing;
 insert into public.acts
   (hash, act_type, command_type, identity_hash, parents, decision_cut,
    command_hash, auth_chain, registry_cut, rule_hashes, context_hash,
-   payload_hash, claimed_when)
+   payload_hash, validity_rule_hash, validity_disposition, claimed_when)
 values
   (repeat('da', 32), 'CommandSubmitted', 'InvariantProbe', repeat('ac', 32),
    '[]'::jsonb, '[]'::jsonb, repeat('cd', 32), '[]'::jsonb, '[]'::jsonb,
-   '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), null),
+   '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null),
   (repeat('db', 32), 'CommandValidated', 'InvariantProbe', repeat('ac', 32),
    '[]'::jsonb, '[]'::jsonb, repeat('cd', 32), '[]'::jsonb, '[]'::jsonb,
-   '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), null),
+   '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null),
   (repeat('dc', 32), 'ReviewRequested', 'InvariantProbe', repeat('ac', 32),
    '[]'::jsonb, '[]'::jsonb, repeat('cd', 32), '[]'::jsonb, '[]'::jsonb,
-   '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), null)
+   '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null)
 on conflict (hash) do nothing;
 
 do $$
@@ -239,20 +243,20 @@ on conflict (hash) do nothing;
 insert into public.acts
   (hash, act_type, command_type, identity_hash, parents, decision_cut,
    command_hash, auth_chain, registry_cut, rule_hashes, context_hash,
-   payload_hash, claimed_when)
+   payload_hash, validity_rule_hash, validity_disposition, claimed_when)
 values
   (repeat('dd', 32), 'ProbeHappened', 'InvariantProbe', repeat('ac', 32),
    '[]'::jsonb, '[]'::jsonb, repeat('cd', 32), '[]'::jsonb, '[]'::jsonb,
-   '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), null)
+   '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null)
 on conflict (hash) do nothing;
 
 select pg_temp.must_refuse('a second consequential Act for one Command', $q$
   insert into public.acts
     (hash, act_type, command_type, identity_hash, parents, decision_cut,
      command_hash, auth_chain, registry_cut, rule_hashes, context_hash,
-     payload_hash, claimed_when)
+     payload_hash, validity_rule_hash, validity_disposition, claimed_when)
   values
     (repeat('de', 32), 'ProbeHappened', 'InvariantProbe', repeat('ac', 32),
      '[]'::jsonb, '[]'::jsonb, repeat('cd', 32), '[]'::jsonb, '[]'::jsonb,
-     '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), null)
+     '[]'::jsonb, repeat('ad', 32), repeat('ae', 32), repeat('a0', 32), 'VALID', null)
 $q$);

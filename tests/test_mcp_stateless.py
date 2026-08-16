@@ -8,7 +8,8 @@ from starlette.testclient import TestClient
 
 from kernel.canon import canonicalize, object_hash
 from kernel.rules import RuleResult
-from kernel.types import Act, Context, DecisionKind, Identity
+from kernel.types import Act, Context, DecisionKind, DecisionValidityDisposition, Identity
+from kernel.validity import DECLARED_DECISION_CUT_RULE
 from ledger.memory import MemoryLedger
 from protocol.mcp.models import ActionInput
 from protocol.mcp.server import MCP_PROTOCOL_VERSION, create_server
@@ -19,6 +20,14 @@ from service.models import DERIVED_CONTEXT_KEYS
 from service.observation import ObservationService
 from service.review import ReviewService
 from service.runtime import KernelRuntime
+
+VALIDITY_RULE_HASH = object_hash(
+    "rule", {"name": DECLARED_DECISION_CUT_RULE, "version": 1}
+)
+
+
+def context_type_hash(name: str) -> str:
+    return object_hash("registry", {"kind": "context_type", "name": name, "version": 1})
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +61,8 @@ def setup_runtime() -> tuple[KernelRuntime, Ed25519PrivateKey, str, str]:
         (),
         genesis,
         genesis,
+        VALIDITY_RULE_HASH,
+        DecisionValidityDisposition.VALID,
     )
     ledger.command_index["genesis-command"] = [genesis]
     private_key = Ed25519PrivateKey.generate()
@@ -64,12 +75,20 @@ def setup_runtime() -> tuple[KernelRuntime, Ed25519PrivateKey, str, str]:
     ledger.seed_identity(Identity(identity_hash, "human", public_key))
     ledger.register("command_type", "CreateThing", genesis)
     ledger.register("act_type", "ThingCreated", genesis)
-    ledger.register("context_type", "request.origin", genesis)
+    ledger.register(
+        "context_type", "request.origin", genesis,
+        entry_hash=context_type_hash("request.origin"),
+    )
     for derived in DERIVED_CONTEXT_KEYS:
-        ledger.register("context_type", derived, genesis)
+        ledger.register(
+            "context_type", derived, genesis, entry_hash=context_type_hash(derived)
+        )
     rule_hash = object_hash("rule", {"name": "test.allow", "version": 1})
     rule = AllowRule(rule_hash)
     ledger.register("rule", "test.allow", genesis, entry_hash=rule_hash)
+    ledger.register(
+        "rule", DECLARED_DECISION_CUT_RULE, genesis, entry_hash=VALIDITY_RULE_HASH
+    )
     resolver = ConfiguredRuleResolver(
         ledger,
         rule_names=("test.allow",),
@@ -107,7 +126,7 @@ def signed_action(
             "command": {**unsigned, "signature": signature},
             "context": {
                 "values": {"request.origin": "test"},
-                "types": {"request.origin": "origin-v1"},
+                "types": {"request.origin": context_type_hash("request.origin")},
             },
             "act_type": "ThingCreated",
             "payload": payload,

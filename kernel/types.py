@@ -20,6 +20,18 @@ class DecisionKind(StrEnum):
     REQUIRE_REVIEW = "require_review"
 
 
+class DecisionValidityDisposition(StrEnum):
+    """Whether an authorization decision still applies at admission time.
+
+    This is deliberately not an authorization outcome.  A stale authorization
+    must be re-evaluated; it is not retroactively turned into a business denial.
+    """
+
+    VALID = "VALID"
+    REAUTHORIZE = "REAUTHORIZE"
+    COMMIT_REGARDLESS = "COMMIT_REGARDLESS"
+
+
 # Which authorization outcome may produce which Act (spec v3 sections 6.1, 8.1).
 #
 # A blanket "lifecycle Acts skip the allow check" would open a door where a deny
@@ -78,6 +90,12 @@ class Context:
         object.__setattr__(self, "types", MappingProxyType(dict(self.types)))
         if set(self.values) != set(self.types):
             raise ValueError("every context value must have exactly one registered type")
+        if any(
+            len(definition_hash) != 64
+            or any(character not in "0123456789abcdef" for character in definition_hash)
+            for definition_hash in self.types.values()
+        ):
+            raise ValueError("Context types must be lowercase SHA-256 definition hashes")
 
     @property
     def hash(self) -> str:
@@ -127,6 +145,8 @@ class Act:
     rule_hashes: tuple[str, ...]
     context_hash: str
     payload_hash: str
+    validity_rule_hash: str
+    validity_disposition: DecisionValidityDisposition
     claimed_when: str | None = None
 
 
@@ -134,10 +154,11 @@ class Act:
 class Relation:
     from_hash: str
     to_hash: str
-    relation_type: str
+    relation_type_hash: str
     payload_hash: str | None = None
 
     @property
     def hash(self) -> str:
         return object_hash("relation", {"from": self.from_hash, "payload": self.payload_hash,
-                                        "relation_type": self.relation_type, "to": self.to_hash})
+                                        "relation_type_hash": self.relation_type_hash,
+                                        "to": self.to_hash})

@@ -12,7 +12,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
-from kernel.types import Act, Identity
+from kernel.types import Act, DecisionValidityDisposition, Identity
 
 from .base import ObjectRecord, RegistryEntry
 
@@ -43,6 +43,8 @@ def _row_to_act(row: Mapping[str, Any]) -> Act:
         rule_hashes=tuple(row["rule_hashes"]),
         context_hash=str(row["context_hash"]),
         payload_hash=str(row["payload_hash"]),
+        validity_rule_hash=str(row["validity_rule_hash"]),
+        validity_disposition=DecisionValidityDisposition(str(row["validity_disposition"])),
         claimed_when=row.get("claimed_when"),
     )
 
@@ -80,6 +82,35 @@ class PostgresStore:
             ).fetchone()
         return bool(row and row["present"])
 
+    def definition_registered(
+        self, kind: str, name: str, definition_hash: str, cut: frozenset[str]
+    ) -> bool:
+        with self._pool.connection() as connection:
+            row = connection.execute(
+                """
+                select exists (
+                  select 1 from public.registry
+                  where kind = %s and name = %s and hash = %s and %s::jsonb ? born_at
+                ) as present
+                """,
+                (kind, name, definition_hash, Jsonb(sorted(cut))),
+            ).fetchone()
+        return bool(row and row["present"])
+
+    def latest_definition_hash(
+        self, kind: str, name: str, cut: frozenset[str]
+    ) -> str | None:
+        with self._pool.connection() as connection:
+            row = connection.execute(
+                """
+                select hash from public.registry
+                where kind = %s and name = %s and %s::jsonb ? born_at
+                order by version desc limit 1
+                """,
+                (kind, name, Jsonb(sorted(cut))),
+            ).fetchone()
+        return str(row["hash"]) if row is not None else None
+
     def has_object(self, object_hash: str) -> bool:
         return self.get_object(object_hash) is not None
 
@@ -110,7 +141,7 @@ class PostgresStore:
             row = connection.execute(
                 """
                 select * from powerfarm_internal.commit_act(
-                  %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                  %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
                 """,
                 (
@@ -127,6 +158,8 @@ class PostgresStore:
                     Jsonb(list(act.rule_hashes)),
                     act.context_hash,
                     act.payload_hash,
+                    act.validity_rule_hash,
+                    act.validity_disposition.value,
                     act.claimed_when,
                 ),
             ).fetchone()

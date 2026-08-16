@@ -125,12 +125,18 @@ status = "IMPLEMENTED"
 tests = [
   "conformance/test_kernel.py::test_pf13_the_act_records_the_cut_the_decision_examined",
   "conformance/test_kernel.py::test_tampering_and_cut_drift_fail_loud",
+  "tests/test_canonical_preimages.py::test_cr1_v1_has_a_distinct_typed_domain",
+  "conformance/sql/pf21_admission.sql",
 ]
 
 [PF-14]
 title = "Context Typing"
 status = "IMPLEMENTED"
-tests = ["conformance/test_kernel.py::test_pf14_the_act_records_the_authorizing_context"]
+tests = [
+  "conformance/test_kernel.py::test_pf14_the_act_records_the_authorizing_context",
+  "conformance/test_pf21.py::test_context_key_bound_to_the_wrong_definition_hash_is_refused",
+  "tests/test_canonical_preimages.py::test_context_type_names_are_no_longer_valid_preimage_content",
+]
 
 [PF-15]
 title = "Lifecycle Completeness"
@@ -176,7 +182,10 @@ tests = [
 [PF-22]
 title = "Domain-Separated Hashing"
 status = "IMPLEMENTED"
-tests = ["tests/test_canon.py::test_rfc8785_golden_vectors_byte_exact"]
+tests = [
+  "tests/test_canon.py::test_rfc8785_golden_vectors_byte_exact",
+  "tests/test_canonical_preimages.py::test_r26_preimage_hashes_are_frozen",
+]
 
 [PF-23]
 title = "Unique Occurrence"

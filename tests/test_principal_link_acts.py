@@ -9,7 +9,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from agent.tools import propose_command
 from kernel.canon import canonicalize, object_hash
 from kernel.rules import RuleResult
-from kernel.types import Act, Context, DecisionKind, Identity
+from kernel.types import Act, Context, DecisionKind, DecisionValidityDisposition, Identity
+from kernel.validity import DECLARED_DECISION_CUT_RULE
 from ledger.memory import MemoryLedger
 from service.authority import AuthorityService, ConfiguredRuleResolver
 from service.errors import ValidationError
@@ -20,6 +21,13 @@ GENESIS = "0" * 64
 ISSUER = "https://wcguhgyiaphigiduyjpx.supabase.co/auth/v1"
 SUBJECT = "9f1c0b3e-1d4a-4d8b-8f2a-6c5e7a9b0d31"
 RULE_HASH = object_hash("rule", {"name": "test.allow", "version": 1})
+VALIDITY_RULE_HASH = object_hash(
+    "rule", {"name": DECLARED_DECISION_CUT_RULE, "version": 1}
+)
+
+
+def context_type_hash(name: str) -> str:
+    return object_hash("registry", {"kind": "context_type", "name": name, "version": 1})
 
 
 class AllowRule:
@@ -33,8 +41,11 @@ class AllowRule:
 
 def build() -> tuple[PrincipalService, MemoryLedger, Identity, Ed25519PrivateKey]:
     ledger = MemoryLedger()
-    ledger.acts[GENESIS] = Act(GENESIS, "GenesisClosed", GENESIS, (), frozenset(),
-                               "genesis-command", (), frozenset(), (), GENESIS, GENESIS)
+    ledger.acts[GENESIS] = Act(
+        GENESIS, "GenesisClosed", GENESIS, (), frozenset(), "genesis-command",
+        (), frozenset(), (), GENESIS, GENESIS, VALIDITY_RULE_HASH,
+        DecisionValidityDisposition.VALID,
+    )
     ledger.command_index["genesis-command"] = [GENESIS]
     private = Ed25519PrivateKey.from_private_bytes(b"\x05" * 32)
     public = private.public_key().public_bytes(
@@ -47,8 +58,13 @@ def build() -> tuple[PrincipalService, MemoryLedger, Identity, Ed25519PrivateKey
     for name in ("PrincipalLinked", "PrincipalRevoked"):
         ledger.register("act_type", name, GENESIS)
     for key in DERIVED_CONTEXT_KEYS:
-        ledger.register("context_type", key, GENESIS)
+        ledger.register(
+            "context_type", key, GENESIS, entry_hash=context_type_hash(key)
+        )
     ledger.register("rule", "test.allow", GENESIS, entry_hash=RULE_HASH)
+    ledger.register(
+        "rule", DECLARED_DECISION_CUT_RULE, GENESIS, entry_hash=VALIDITY_RULE_HASH
+    )
     resolver = ConfiguredRuleResolver(
         ledger, rule_names=("test.allow",), static_rules={"test.allow": AllowRule()})
     authority = AuthorityService(ledger, resolver, allow_signed_without_oauth=True)

@@ -9,7 +9,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from agent.tools import propose_command
 from kernel.canon import canonicalize, object_hash
 from kernel.rules import RuleResult
-from kernel.types import Act, Context, DecisionKind, Identity
+from kernel.types import Act, Context, DecisionKind, DecisionValidityDisposition, Identity
+from kernel.validity import DECLARED_DECISION_CUT_RULE
 from ledger.memory import MemoryLedger
 from service.authority import AuthorityService, ConfiguredRuleResolver
 from service.errors import AuthorizationError, ValidationError
@@ -25,6 +26,13 @@ GENESIS = "0" * 64
 ISSUER = "https://wcguhgyiaphigiduyjpx.supabase.co/auth/v1"
 SUBJECT = "9f1c0b3e-1d4a-4d8b-8f2a-6c5e7a9b0d31"
 RULE_HASH = object_hash("rule", {"name": "test.delegation", "version": 1})
+VALIDITY_RULE_HASH = object_hash(
+    "rule", {"name": DECLARED_DECISION_CUT_RULE, "version": 1}
+)
+
+
+def context_type_hash(name: str) -> str:
+    return object_hash("registry", {"kind": "context_type", "name": name, "version": 1})
 
 
 class DelegationRule:
@@ -60,8 +68,11 @@ def build(*, permitted: frozenset[tuple[str, str]] = frozenset()) -> tuple[
     AuthorityService, MemoryLedger, Identity, Identity, Ed25519PrivateKey, str
 ]:
     ledger = MemoryLedger()
-    ledger.acts[GENESIS] = Act(GENESIS, "GenesisClosed", GENESIS, (), frozenset(),
-                               "genesis-command", (), frozenset(), (), GENESIS, GENESIS)
+    ledger.acts[GENESIS] = Act(
+        GENESIS, "GenesisClosed", GENESIS, (), frozenset(), "genesis-command",
+        (), frozenset(), (), GENESIS, GENESIS, VALIDITY_RULE_HASH,
+        DecisionValidityDisposition.VALID,
+    )
     ledger.command_index["genesis-command"] = [GENESIS]
     human, _ = keypair(b"\x01" * 32)
     raw_service, service_key = keypair(b"\x02" * 32)
@@ -70,10 +81,18 @@ def build(*, permitted: frozenset[tuple[str, str]] = frozenset()) -> tuple[
     ledger.seed_identity(platform)
     ledger.register("command_type", "CreateThing", GENESIS)
     ledger.register("act_type", "ThingCreated", GENESIS)
-    ledger.register("context_type", "request.origin", GENESIS)
+    ledger.register(
+        "context_type", "request.origin", GENESIS,
+        entry_hash=context_type_hash("request.origin"),
+    )
     for key in DERIVED_CONTEXT_KEYS:
-        ledger.register("context_type", key, GENESIS)
+        ledger.register(
+            "context_type", key, GENESIS, entry_hash=context_type_hash(key)
+        )
     ledger.register("rule", "test.delegation", GENESIS, entry_hash=RULE_HASH)
+    ledger.register(
+        "rule", DECLARED_DECISION_CUT_RULE, GENESIS, entry_hash=VALIDITY_RULE_HASH
+    )
     payload_hash = object_hash("payload", {"name": "one"})
     ledger.put_object(payload_hash, canonicalize({"name": "one"}), "payload")
     resolver = ConfiguredRuleResolver(
@@ -86,10 +105,10 @@ def action(platform: Identity, key: Ed25519PrivateKey, payload_hash: str,
            extra: dict[str, str] | None = None) -> ActionRequest:
     command = propose_command("CreateThing", platform.hash, payload_hash, (GENESIS,), "n-1", key)
     values: dict[str, object] = {"request.origin": "test"}
-    types = {"request.origin": "request.origin"}
+    types = {"request.origin": context_type_hash("request.origin")}
     for name, value in (extra or {}).items():
         values[name] = value
-        types[name] = name
+        types[name] = context_type_hash(name)
     return ActionRequest(
         command_type="CreateThing", identity_hash=platform.hash, payload_hash=payload_hash,
         parents=(GENESIS,), nonce="n-1",

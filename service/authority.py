@@ -21,7 +21,12 @@ from kernel.types import (
     Context,
     Decision,
     DecisionKind,
+    DecisionValidityDisposition,
     Identity,
+)
+from kernel.validity import (
+    DECLARED_DECISION_CUT_RULE,
+    evaluate_declared_decision_cut,
 )
 from ledger.base import Ledger
 
@@ -144,12 +149,13 @@ class AuthorityService:
         requested_by, requester_kind = self._identities.resolve_requester(
             identity, principal, history_cut
         )
-        context = request.context({
+        derived = {
             REQUESTED_BY: requested_by,
             PERFORMED_BY: identity.hash,
             REQUESTER_KIND: requester_kind,
             OAUTH_CLIENT: principal.client_id if principal is not None else identity.hash,
-        })
+        }
+        context = request.context(derived, self._context_type_hashes(derived, registry_cut))
         self._validate_payload(request)
         self._validate_registry(request, context, registry_cut)
         rules = self._rules.resolve(command, context, history_cut, registry_cut)
@@ -186,8 +192,12 @@ class AuthorityService:
             if settled is not None:
                 return settled
         cut_before = self._ledger.history_cut()
-        if evaluated.decision.cut != cut_before:
-            raise ConflictError("history advanced after evaluation; reauthorization required")
+        validity_rule_hash = self._decision_validity_rule_hash(evaluated.decision.registry_cut)
+        validity = evaluate_declared_decision_cut(
+            validity_rule_hash, evaluated.decision.cut, cut_before
+        )
+        if validity.disposition is DecisionValidityDisposition.REAUTHORIZE:
+            raise ConflictError(validity.reason)
         if request.payload is not None:
             self._ledger.put_object(
                 request.payload_hash, canonicalize(request.payload), "payload"
@@ -259,9 +269,35 @@ class AuthorityService:
             raise ValidationError("unregistered command type")
         if not self._ledger.registered("act_type", request.act_type, registry_cut):
             raise ValidationError("unregistered Act type")
-        for key in context.values:
-            if not self._ledger.registered("context_type", key, registry_cut):
+        for key, definition_hash in context.types.items():
+            if not self._ledger.definition_registered(
+                "context_type", key, definition_hash, registry_cut
+            ):
                 raise ValidationError(f"unregistered Context type: {key}")
+
+    def _context_type_hashes(
+        self, values: Mapping[str, str], registry_cut: frozenset[str]
+    ) -> dict[str, str]:
+        entries = {
+            entry.name: entry.hash
+            for entry in self._ledger.registry_entries("context_type", registry_cut)
+        }
+        missing = sorted(set(values) - entries.keys())
+        if missing:
+            raise ValidationError(
+                "unregistered derived Context types: " + ", ".join(missing)
+            )
+        return {key: entries[key] for key in values}
+
+    def _decision_validity_rule_hash(self, registry_cut: frozenset[str]) -> str:
+        rule_hash = self._ledger.latest_definition_hash(
+            "rule", DECLARED_DECISION_CUT_RULE, registry_cut
+        )
+        if rule_hash is None:
+            raise ValidationError(
+                "declared-decision-cut is not registered at the Registry cut"
+            )
+        return rule_hash
 
     @staticmethod
     def _verify_signature(identity: Identity, command: Command) -> None:

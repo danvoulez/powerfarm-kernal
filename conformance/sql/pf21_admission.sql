@@ -14,6 +14,7 @@
 --   0 Genesis Act   1 second Act    2 Identity     3 Context      4 payload
 --   5 rule v1       6 rule v2       7 command_type 8 act_type     9 unregistered
 --   c admitted Act  d/f command     e Act that must never land
+--   a1 decision-validity Rule
 
 \set ON_ERROR_STOP on
 
@@ -28,6 +29,7 @@ insert into public.objects (hash, canon, kind) values
   (repeat('4', 64), '\x04', 'payload'),
   (repeat('5', 64), '\x05', 'rule'),
   (repeat('6', 64), '\x06', 'rule'),
+  (repeat('a1', 32), '\xa1', 'rule'),
   (repeat('7', 64), '\x07', 'command_type'),
   (repeat('8', 64), '\x08', 'act_type')
 on conflict (hash) do nothing;
@@ -37,15 +39,16 @@ on conflict (hash) do nothing;
 insert into public.acts
   (hash, act_type, command_type, identity_hash, parents, decision_cut,
    command_hash, auth_chain, registry_cut, rule_hashes, context_hash,
-   payload_hash, claimed_when)
+   payload_hash, validity_rule_hash, validity_disposition, claimed_when)
 values
   (repeat('0', 64), 'GenesisClosed', 'Genesis', repeat('2', 64), '[]'::jsonb,
    '[]'::jsonb, repeat('a', 64), '[]'::jsonb, '[]'::jsonb, '[]'::jsonb,
-   repeat('3', 64), repeat('4', 64), null),
+   repeat('3', 64), repeat('4', 64), repeat('a1', 32), 'VALID', null),
   (repeat('1', 64), 'ThingCreated', 'CreateThing', repeat('2', 64),
    to_jsonb(array[repeat('0', 64)]), to_jsonb(array[repeat('0', 64)]),
    repeat('b', 64), '[]'::jsonb, to_jsonb(array[repeat('0', 64)]),
-   to_jsonb(array[repeat('5', 64)]), repeat('3', 64), repeat('4', 64), null)
+   to_jsonb(array[repeat('5', 64)]), repeat('3', 64), repeat('4', 64),
+   repeat('a1', 32), 'VALID', null)
 on conflict (hash) do nothing;
 
 insert into public.identities (hash, kind, created_act)
@@ -59,7 +62,8 @@ values
   (repeat('7', 64), 'command_type', 'CreateThing',  1, repeat('0', 64), false),
   (repeat('8', 64), 'act_type',     'ThingCreated', 1, repeat('0', 64), false),
   (repeat('5', 64), 'rule',         'test.allow',   1, repeat('0', 64), false),
-  (repeat('6', 64), 'rule',         'test.allow',   2, repeat('1', 64), false)
+  (repeat('6', 64), 'rule',         'test.allow',   2, repeat('1', 64), false),
+  (repeat('a1', 32), 'rule', 'declared-decision-cut', 1, repeat('0', 64), true)
 on conflict (hash) do nothing;
 
 commit;
@@ -91,7 +95,7 @@ select powerfarm_internal.commit_act(
   repeat('d', 64), '[]'::jsonb,
   to_jsonb(array[repeat('0', 64)]),
   to_jsonb(array[repeat('5', 64)]),
-  repeat('3', 64), repeat('4', 64), null);
+  repeat('3', 64), repeat('4', 64), repeat('a1', 32), 'VALID', null);
 
 -- Case 7 -- what was admitted is exactly what authorized it, and stays so.
 do $$
@@ -118,7 +122,7 @@ select pg_temp.must_refuse('rule born after the declared Registry cut', $q$
     repeat('f', 64), '[]'::jsonb,
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('6', 64)]),
-    repeat('3', 64), repeat('4', 64), null)
+    repeat('3', 64), repeat('4', 64), repeat('a1', 32), 'VALID', null)
 $q$);
 
 -- Case 3 -- a Rule hash nobody registered. The name 'test.allow' is registered
@@ -131,7 +135,7 @@ select pg_temp.must_refuse('right name, unregistered hash', $q$
     repeat('f', 64), '[]'::jsonb,
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('9', 64)]),
-    repeat('3', 64), repeat('4', 64), null)
+    repeat('3', 64), repeat('4', 64), repeat('a1', 32), 'VALID', null)
 $q$);
 
 -- Case 4 -- an act type that is not registered at the declared Registry cut.
@@ -143,7 +147,7 @@ select pg_temp.must_refuse('act type unregistered at the declared cut', $q$
     repeat('f', 64), '[]'::jsonb,
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('5', 64)]),
-    repeat('3', 64), repeat('4', 64), null)
+    repeat('3', 64), repeat('4', 64), repeat('a1', 32), 'VALID', null)
 $q$);
 
 -- Case 5 -- one unresolvable hash among several rejects the whole admission.
@@ -156,7 +160,7 @@ select pg_temp.must_refuse('one bad hash among several', $q$
     repeat('f', 64), '[]'::jsonb,
     to_jsonb(array[repeat('0', 64)]),
     to_jsonb(array[repeat('5', 64), repeat('9', 64)]),
-    repeat('3', 64), repeat('4', 64), null)
+    repeat('3', 64), repeat('4', 64), repeat('a1', 32), 'VALID', null)
 $q$);
 
 -- Case 6 -- no Rule at all cannot buy a consequence.
@@ -168,7 +172,31 @@ select pg_temp.must_refuse('empty rule_hashes', $q$
     repeat('f', 64), '[]'::jsonb,
     to_jsonb(array[repeat('0', 64)]),
     '[]'::jsonb,
-    repeat('3', 64), repeat('4', 64), null)
+    repeat('3', 64), repeat('4', 64), repeat('a1', 32), 'VALID', null)
+$q$);
+
+-- R-26 -- decision validity is separately attributed to CR-1.  An ordinary
+-- authorization Rule cannot be smuggled into that field.
+select pg_temp.must_refuse('authorization Rule used as decision-validity Rule', $q$
+  select powerfarm_internal.commit_act(
+    repeat('e', 64), '\xe0'::bytea, 'ThingCreated', 'CreateThing', repeat('2', 64),
+    to_jsonb(array[repeat('0', 64)]),
+    to_jsonb(array[repeat('0', 64), repeat('1', 64), repeat('c', 64)]),
+    repeat('f', 64), '[]'::jsonb,
+    to_jsonb(array[repeat('0', 64)]),
+    to_jsonb(array[repeat('5', 64)]),
+    repeat('3', 64), repeat('4', 64), repeat('5', 64), 'VALID', null)
+$q$);
+
+select pg_temp.must_refuse('COMMIT_REGARDLESS is unreachable in CR-1 v1', $q$
+  select powerfarm_internal.commit_act(
+    repeat('e', 64), '\xe0'::bytea, 'ThingCreated', 'CreateThing', repeat('2', 64),
+    to_jsonb(array[repeat('0', 64)]),
+    to_jsonb(array[repeat('0', 64), repeat('1', 64), repeat('c', 64)]),
+    repeat('f', 64), '[]'::jsonb,
+    to_jsonb(array[repeat('0', 64)]),
+    to_jsonb(array[repeat('5', 64)]),
+    repeat('3', 64), repeat('4', 64), repeat('a1', 32), 'COMMIT_REGARDLESS', null)
 $q$);
 
 -- Nothing from the refusal cases may have landed.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .canon import object_hash
 from .types import Act
 
 
@@ -13,7 +14,7 @@ class MemoryStore:
         # is one-to-many. It is a trajectory index, not an identity: the Command
         # is the subject whose trajectory we reconstruct, never the occurrence.
         self.command_index: dict[str, list[str]] = {}
-        self.registry: set[tuple[str, str, str]] = set()
+        self.registry: set[tuple[str, str, int, str, str]] = set()
 
     def history_cut(self) -> frozenset[str]:
         # A cut is closed under ancestry (spec v3 section 10.2): the full known
@@ -21,10 +22,46 @@ class MemoryStore:
         return frozenset(self.acts)
 
     def registered(self, kind: str, name: str, cut: frozenset[str]) -> bool:
-        return any(k == kind and n == name and born in cut for k, n, born in self.registry)
+        return any(
+            k == kind and (n == name or definition_hash == name) and born in cut
+            for k, n, _version, definition_hash, born in self.registry
+        )
 
-    def register(self, kind: str, name: str, born_at: str) -> None:
-        self.registry.add((kind, name, born_at))
+    def definition_registered(
+        self, kind: str, name: str, definition_hash: str, cut: frozenset[str]
+    ) -> bool:
+        return any(
+            k == kind and n == name and h == definition_hash and born in cut
+            for k, n, _version, h, born in self.registry
+        )
+
+    def latest_definition_hash(
+        self, kind: str, name: str, cut: frozenset[str]
+    ) -> str | None:
+        candidates = (
+            (version, definition_hash)
+            for k, n, version, definition_hash, born in self.registry
+            if k == kind and n == name and born in cut
+        )
+        latest = max(candidates, default=None)
+        return latest[1] if latest is not None else None
+
+    def register(
+        self,
+        kind: str,
+        name: str,
+        born_at: str,
+        *,
+        version: int = 1,
+        entry_hash: str | None = None,
+    ) -> str:
+        definition_hash = entry_hash or (
+            name
+            if len(name) == 64 and all(character in "0123456789abcdef" for character in name)
+            else object_hash("registry", {"kind": kind, "name": name, "version": version})
+        )
+        self.registry.add((kind, name, version, definition_hash, born_at))
+        return definition_hash
 
     def has_object(self, object_hash: str) -> bool:
         return object_hash in self.objects
