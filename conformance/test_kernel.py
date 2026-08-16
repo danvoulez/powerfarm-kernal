@@ -1,4 +1,6 @@
 import base64
+import json
+import re
 from dataclasses import dataclass
 
 import pytest
@@ -61,14 +63,81 @@ def setup_case() -> tuple[MemoryStore, Identity, object, Context, object, Ed2551
     return store, identity, command, context, decision, private
 
 
-def test_pf01_pf02_pf03_pf04_pf08_pf11_pf13_pf14_pf23() -> None:
+# One law per test. The nine assertions below used to share a single name, which
+# meant a red badge said "something constitutional broke" and nothing more. The
+# fixture is still shared; the reporting unit is now the law.
+
+
+def admitted() -> tuple[MemoryStore, Act, Identity, object, Context, object]:
+    """One admitted Act plus everything that authorized it.
+
+    setup_case() mints a fresh keypair per call, so every assertion about "the
+    identity that signed it" must come from the same invocation that produced
+    the Act.
+    """
     store, identity, command, context, decision, _private = setup_case()
-    gate = CommitGate(store)
-    act = gate.commit(identity, command, decision, context, act_type="ThingCreated")
-    assert gate.commit(identity, command, decision, context, act_type="ThingCreated") == act
-    assert store.objects[act.hash][0]
+    act = CommitGate(store).commit(identity, command, decision, context,
+                                   act_type="ThingCreated")
+    return store, act, identity, command, context, decision
+
+
+def test_pf01_the_act_names_the_identity_that_signed_it() -> None:
+    """PF-01: no consequential Command without a verified proof of control."""
+    _store, act, identity, _command, _context, _decision = admitted()
+    assert act.identity_hash == identity.hash
+
+
+def test_pf02_an_unregistered_command_type_is_refused() -> None:
+    """PF-02: governed objects require registered types, valid at the cut."""
+    store, identity, command, context, decision, private = setup_case()
+    unregistered = propose_command("NeverRegistered", identity.hash, command.payload_hash,
+                                   (GENESIS,), "n-2", private)
+    with pytest.raises(CommitError, match="unregistered command type"):
+        CommitGate(store).commit(identity, unregistered, decision, context,
+                                 act_type="ThingCreated")
+
+
+def test_pf03_the_act_names_the_command_that_caused_it() -> None:
+    """PF-03: governed changes originate through Commands, traceably."""
+    _store, act, _identity, command, _context, _decision = admitted()
+    assert act.command_hash == command.hash
+
+
+def test_pf04_the_act_cites_the_rules_that_authorized_it() -> None:
+    """PF-04: consequential Acts require applicable authorization."""
+    _store, act, _identity, _command, _context, decision = admitted()
+    assert act.rule_hashes
+    assert act.rule_hashes == decision.rule_hashes  # type: ignore[attr-defined]
+
+
+def test_pf08_stored_bytes_hash_to_the_identity_they_are_stored_under() -> None:
+    """PF-08: H(Canonical(O)) = O.id, checked against what was actually persisted."""
+    store, act, _identity, _command, _context, _decision = admitted()
+    canon, kind = store.objects[act.hash]
+    assert kind == "act"
+    assert object_hash("act", json.loads(canon)) == act.hash
+
+
+def test_pf11_the_act_holds_references_never_embedded_values() -> None:
+    """PF-11: objects reference objects by content hash; embedding is forbidden."""
+    store, act, _identity, _command, _context, _decision = admitted()
+    value = json.loads(store.objects[act.hash][0])
+    for field in ("command_hash", "context_hash", "payload_hash"):
+        assert re.fullmatch(r"[0-9a-f]{64}", value[field]), (
+            f"{field} must be a bare content hash, got {value[field]!r}")
+    assert all(isinstance(item, str) for item in value["parents"])
+
+
+def test_pf13_the_act_records_the_cut_the_decision_examined() -> None:
+    """PF-13: every authorization decision records the graph cut it examined."""
+    _store, act, _identity, _command, _context, decision = admitted()
+    assert act.decision_cut == decision.cut  # type: ignore[attr-defined]
+
+
+def test_pf14_the_act_records_the_authorizing_context() -> None:
+    """PF-14: the authorizing Context hash is recorded in the Act."""
+    _store, act, _identity, _command, context, _decision = admitted()
     assert act.context_hash == context.hash
-    assert act.decision_cut == decision.cut
 
 
 def test_tampering_and_cut_drift_fail_loud() -> None:

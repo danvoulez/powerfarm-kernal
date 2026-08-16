@@ -1,0 +1,200 @@
+# Conformance law map.
+#
+# The normative list of laws lives in the specification, not here. The checker
+# (conformance/test_law_coverage.py) reads PF-NN identifiers out of the spec and
+# fails when one of them has no classified status -- so adding a law to the
+# constitution forces a decision here rather than being silently uncovered.
+#
+# Statuses are deliberately specific. A generic `waived = true` becomes a dusty
+# trapdoor; these say *why*:
+#
+#   IMPLEMENTED           enforcement exists and executable tests prove it.
+#                         Requires `tests`, and every path must exist.
+#
+#   ENFORCED_UNPROVEN     enforcement exists but nothing tries to violate it.
+#                         Requires `enforced_by` and `tracked_by`. The set of
+#                         laws in this state is frozen below -- adding one is an
+#                         explicit edit, never a drift.
+#
+#   DESIGN_ONLY           the machinery does not exist yet.
+#                         Requires `blocked_by`.
+#
+#   NOT_APPLICABLE        the law cannot apply to this component.
+#                         Requires `reason`.
+#
+#   EXTERNAL_CONFORMANCE  proved against an external system or profile rather
+#                         than the Kernel suite. Requires `profile`.
+#
+# The distinction that matters most is ENFORCED_UNPROVEN vs DESIGN_ONLY:
+# "nobody proved it" is a different risk from "it isn't built".
+
+# Laws currently enforced but unproven. Frozen: the checker fails if the actual
+# set differs in either direction, so closing one requires deleting it here.
+frozen_enforced_unproven = []
+
+
+[PF-01]
+title = "Identity Required"
+status = "IMPLEMENTED"
+tests = [
+  "conformance/test_kernel.py::test_pf01_the_act_names_the_identity_that_signed_it",
+  "conformance/test_kernel.py::test_tampering_and_cut_drift_fail_loud",
+]
+
+[PF-02]
+title = "Registry Closure"
+status = "IMPLEMENTED"
+tests = [
+  "conformance/test_pf21.py::test_definition_born_after_the_declared_cut_is_refused",
+  "conformance/test_kernel.py::test_pf02_an_unregistered_command_type_is_refused",
+]
+
+[PF-03]
+title = "Intent Before Change"
+status = "IMPLEMENTED"
+tests = ["conformance/test_kernel.py::test_pf03_the_act_names_the_command_that_caused_it"]
+
+[PF-04]
+title = "Rule Governance"
+status = "IMPLEMENTED"
+tests = [
+  "conformance/test_kernel.py::test_allow_commits_the_consequential_act",
+  "conformance/test_kernel.py::test_deny_records_commanddenied_but_refuses_consequence",
+  "conformance/test_pf21.py::test_an_empty_rule_set_cannot_buy_a_consequence",
+  "conformance/test_kernel.py::test_pf04_the_act_cites_the_rules_that_authorized_it",
+]
+
+[PF-05]
+title = "Reviewer Is Governed"
+status = "IMPLEMENTED"
+tests = [
+  "conformance/test_kernel.py::test_authorizationreviewed_must_come_from_a_review_command",
+  "conformance/test_kernel.py::test_a_review_of_another_command_cannot_resolve_this_one",
+]
+
+[PF-06]
+title = "Review Is History"
+status = "IMPLEMENTED"
+tests = [
+  "conformance/test_kernel.py::test_full_review_lifecycle_then_consequence",
+  "conformance/test_kernel.py::test_resolution_requires_both_the_request_and_the_review",
+]
+
+[PF-07]
+title = "Immutable Acts"
+status = "IMPLEMENTED"
+tests = ["conformance/sql/ledger_invariants.sql"]
+note = "Six cases: UPDATE and DELETE are each attempted against acts, relations and registry, and the database must refuse all six."
+
+[PF-08]
+title = "CAS Integrity"
+status = "IMPLEMENTED"
+tests = [
+  "tests/test_canon.py::test_rfc8785_golden_vectors_byte_exact",
+  "conformance/test_kernel.py::test_pf08_stored_bytes_hash_to_the_identity_they_are_stored_under",
+]
+
+[PF-09]
+title = "Typed Relations"
+status = "DESIGN_ONLY"
+blocked_by = "Phase 0a -- `relations` has no writer and no `admitted_act`; nothing can create a typed Relation to test"
+
+[PF-10]
+title = "Acyclic Ancestry"
+status = "IMPLEMENTED"
+tests = ["conformance/sql/ledger_invariants.sql"]
+note = "A cycle is unconstructible because parents must pre-exist and an Act may not be its own parent. Both refusals are now asserted rather than inferred."
+
+[PF-11]
+title = "Reference Discipline"
+status = "IMPLEMENTED"
+tests = [
+  "tests/test_canon.py::test_canon_is_deterministic_and_domain_separated",
+  "conformance/test_kernel.py::test_pf11_the_act_holds_references_never_embedded_values",
+]
+
+[PF-12]
+title = "Causal Order Constitutional"
+status = "IMPLEMENTED"
+tests = ["conformance/sql/ledger_invariants.sql"]
+note = "An aborted transaction burns a seq value; history is unchanged and the next Act's seq has skipped. Demonstrates gaps exist and that the cut is a set of hashes."
+
+[PF-13]
+title = "Declared Decision Cut"
+status = "IMPLEMENTED"
+tests = [
+  "conformance/test_kernel.py::test_pf13_the_act_records_the_cut_the_decision_examined",
+  "conformance/test_kernel.py::test_tampering_and_cut_drift_fail_loud",
+]
+
+[PF-14]
+title = "Context Typing"
+status = "IMPLEMENTED"
+tests = ["conformance/test_kernel.py::test_pf14_the_act_records_the_authorizing_context"]
+
+[PF-15]
+title = "Lifecycle Completeness"
+status = "IMPLEMENTED"
+tests = [
+  "conformance/test_kernel.py::test_pf15_same_command_different_lifecycle_acts_both_exist",
+  "conformance/sql/ledger_invariants.sql",
+]
+
+[PF-16]
+title = "Deterministic Projection"
+status = "DESIGN_ONLY"
+blocked_by = "Phase 2 -- no projector is implemented, so `P(G) = P(G)` has nothing to assert"
+
+[PF-17]
+title = "Observation Provenance"
+status = "IMPLEMENTED"
+tests = ["tests/test_mcp_stateless.py"]
+
+[PF-18]
+title = "No Plaintext Secrets in History"
+status = "DESIGN_ONLY"
+blocked_by = "no registered Act type yet carries secret-bearing material; the law has no surface to violate"
+
+[PF-19]
+title = "Acyclic Genesis"
+status = "IMPLEMENTED"
+tests = ["tests/test_genesis.py::test_genesis_is_stable_and_dependency_ordered"]
+
+[PF-20]
+title = "Self-Government"
+status = "IMPLEMENTED"
+tests = ["tests/test_principal_link_acts.py"]
+
+[PF-21]
+title = "Versioned Governance"
+status = "IMPLEMENTED"
+tests = [
+  "conformance/test_pf21.py",
+  "conformance/sql/pf21_admission.sql",
+]
+
+[PF-22]
+title = "Domain-Separated Hashing"
+status = "IMPLEMENTED"
+tests = ["tests/test_canon.py::test_rfc8785_golden_vectors_byte_exact"]
+
+[PF-23]
+title = "Unique Occurrence"
+status = "IMPLEMENTED"
+tests = ["conformance/test_kernel.py::test_pf23_same_act_submitted_twice_returns_the_same_act"]
+
+[PF-24]
+title = "External Effects Phasing"
+status = "DESIGN_ONLY"
+blocked_by = "no effect-phase vocabulary is registered; Requested/Authorized/Dispatched/Observed cannot yet be collapsed because they cannot yet be expressed"
+
+[PF-25]
+title = "Constitutional Change Discipline"
+status = "DESIGN_ONLY"
+blocked_by = "Genesis -- no constitution has been admitted, so no amendment protocol exists to test"
+
+[PF-26]
+title = "Temporal Honesty"
+status = "IMPLEMENTED"
+tests = ["conformance/test_kernel.py::test_claimed_when_is_part_of_the_act_identity"]
+note = "The distinctness of claimed_when from causal order is proved. External temporal anchoring is a reserved hook (spec 10.3 permits deferring the implementation, not the ontology slot)."

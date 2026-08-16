@@ -25,7 +25,7 @@ jobs:
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
       - run: uv sync --extra dev --locked
       - run: uv run ruff check .
-      - run: uv run mypy kernel worker agent genesis
+      - run: uv run mypy kernel worker agent genesis ledger service protocol
       - run: uv run pytest -q
       - run: bash -n deploy/macos/*.sh deploy/macos/lib/*.sh scripts/ci/*.sh
       - run: uv run python scripts/ci/check_sql.py
@@ -59,7 +59,7 @@ jobs:
       - run: uv sync --extra dev --locked
       - run: >-
           uv run shellcheck --severity=warning
-          deploy/macos/*.sh deploy/macos/lib/*.sh scripts/ci/*.sh
+          deploy/macos/*.sh deploy/macos/lib/*.sh scripts/ci/*.sh .claude/scene/*.sh
       - run: deploy/macos/package.sh --output dist-a
       - run: deploy/macos/package.sh --output dist-b
       - run: cmp dist-a/*.tar.gz dist-b/*.tar.gz

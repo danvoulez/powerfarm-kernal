@@ -71,3 +71,17 @@ if "$PGBIN/psql" -h "$TMP_PG" -p "$PORT" -U powerfarm_worker_test -d postgres \
   exit 1
 fi
 printf 'migration security invariants passed\n'
+
+# PF-21 at the real admission boundary. conformance/test_pf21.py proves the
+# Kernel resolves semantic dependencies to exact definitions; this proves the
+# function that actually admits Acts does the same. Redundant on purpose -- if
+# the two layers ever disagree, the disagreement is the finding.
+"${PSQL[@]}" -f conformance/sql/pf21_admission.sql >/dev/null
+printf 'PF-21 admission conformance passed\n'
+
+# PF-07, PF-10, PF-12 and "one consequence per Command" are enforced by triggers,
+# constraints and a partial unique index. Each case below attempts the forbidden
+# thing: a dropped trigger and a working one look identical to anything that only
+# reads the migration text.
+"${PSQL[@]}" -f conformance/sql/ledger_invariants.sql >/dev/null
+printf 'ledger invariant conformance passed\n'
