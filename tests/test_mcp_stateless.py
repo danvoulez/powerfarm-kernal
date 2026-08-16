@@ -15,6 +15,7 @@ from protocol.mcp.server import MCP_PROTOCOL_VERSION, create_server
 from service.authority import AuthorityService, ConfiguredRuleResolver
 from service.explain import ExplainService
 from service.lifecycle import LifecycleService
+from service.models import DERIVED_CONTEXT_KEYS
 from service.observation import ObservationService
 from service.review import ReviewService
 from service.runtime import KernelRuntime
@@ -64,6 +65,8 @@ def setup_runtime() -> tuple[KernelRuntime, Ed25519PrivateKey, str, str]:
     ledger.register("command_type", "CreateThing", genesis)
     ledger.register("act_type", "ThingCreated", genesis)
     ledger.register("context_type", "request.origin", genesis)
+    for derived in DERIVED_CONTEXT_KEYS:
+        ledger.register("context_type", derived, genesis)
     rule_hash = object_hash("rule", {"name": "test.allow", "version": 1})
     rule = AllowRule(rule_hash)
     ledger.register("rule", "test.allow", genesis, entry_hash=rule_hash)

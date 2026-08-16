@@ -12,6 +12,7 @@ from kernel.rules import RuleResult, authorize
 from kernel.types import Act, Context, DecisionKind, Identity
 from ledger.memory import MemoryLedger
 from service.lifecycle import LifecycleService
+from service.models import DERIVED_CONTEXT_KEYS
 
 GENESIS = "0" * 64
 
@@ -45,6 +46,8 @@ def build() -> tuple[MemoryLedger, Identity, Context, Ed25519PrivateKey]:
                  "AuthorizationResolved"):
         ledger.register("act_type", name, GENESIS)
     ledger.register("context_type", "request.origin", GENESIS)
+    for derived in DERIVED_CONTEXT_KEYS:
+        ledger.register("context_type", derived, GENESIS)
     ledger.register("rule", "test.rule", GENESIS, entry_hash=Rule.hash)
     context = Context({"request.origin": "test"}, {"request.origin": "origin-v1"})
     return ledger, identity, context, private

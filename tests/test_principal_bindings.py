@@ -45,9 +45,18 @@ def service(ledger: MemoryLedger) -> IdentityService:
     return IdentityService(ledger)
 
 
+CUT: frozenset[str] = frozenset()
+
+
+def resolve(ledger: MemoryLedger, performer: Identity,
+            principal: RequestPrincipal | None) -> tuple[str, str]:
+    return IdentityService(ledger).resolve_requester(performer, principal, CUT)
+
+
 def test_a_linked_principal_resolves_to_its_identity() -> None:
     ledger, identity = bound_ledger()
-    service(ledger).require_binding(identity.hash, principal(ISSUER, SUBJECT))
+    requested_by, kind = resolve(ledger, identity, principal(ISSUER, SUBJECT))
+    assert (requested_by, kind) == (identity.hash, "human")
 
 
 def test_the_same_subject_from_another_issuer_is_a_different_principal() -> None:
@@ -55,33 +64,48 @@ def test_the_same_subject_from_another_issuer_is_a_different_principal() -> None
     ledger, identity = bound_ledger()
     assert ledger.resolve_principal(OTHER_ISSUER, SUBJECT) is None
     with pytest.raises(AuthorizationError, match="not linked"):
-        service(ledger).require_binding(identity.hash, principal(OTHER_ISSUER, SUBJECT))
+        resolve(ledger, identity, principal(OTHER_ISSUER, SUBJECT))
 
 
 def test_an_unlinked_principal_is_denied() -> None:
     ledger, identity = bound_ledger()
     with pytest.raises(AuthorizationError, match="not linked"):
-        service(ledger).require_binding(identity.hash, principal(ISSUER, "someone-else"))
+        resolve(ledger, identity, principal(ISSUER, "someone-else"))
 
 
 def test_a_revoked_binding_stops_resolving() -> None:
     ledger, identity = bound_ledger()
     ledger.unlink_principal(ISSUER, SUBJECT)
     with pytest.raises(AuthorizationError, match="not linked"):
-        service(ledger).require_binding(identity.hash, principal(ISSUER, SUBJECT))
-
-
-def test_a_valid_principal_cannot_reach_another_identity() -> None:
-    ledger, _ = bound_ledger()
-    stranger, _ = identity_of(b"\x02" * 32)
-    with pytest.raises(AuthorizationError, match="does not control"):
-        service(ledger).require_binding(stranger.hash, principal(ISSUER, SUBJECT))
+        resolve(ledger, identity, principal(ISSUER, SUBJECT))
 
 
 def test_no_principal_at_all_is_denied() -> None:
     ledger, identity = bound_ledger()
     with pytest.raises(AuthorizationError, match="OAuth principal is required"):
-        service(ledger).require_binding(identity.hash, None)
+        resolve(ledger, identity, None)
+
+
+def test_an_autonomous_service_asks_on_its_own_behalf() -> None:
+    """No person stands at the origin of every Command (Steward, observers, ADK)."""
+    ledger = MemoryLedger()
+    service_identity, _ = identity_of(b"\x09" * 32)
+    ledger.seed_identity(Identity(service_identity.hash, "service", service_identity.public_key))
+    resolved = IdentityService(ledger, allow_signed_without_oauth=True).resolve_requester(
+        Identity(service_identity.hash, "service", service_identity.public_key), None, CUT)
+    assert resolved == (service_identity.hash, "service")
+
+
+def test_a_human_may_request_what_a_service_performs() -> None:
+    """The Platform stops impersonating the person and says who asked."""
+    ledger, human = bound_ledger()
+    service_identity, _ = identity_of(b"\x04" * 32)
+    performer = Identity(service_identity.hash, "service", service_identity.public_key)
+    ledger.seed_identity(performer)
+    requested_by, kind = resolve(ledger, performer, principal(ISSUER, SUBJECT))
+    assert requested_by == human.hash, "the requester is the human the token resolves to"
+    assert kind == "human"
+    assert requested_by != performer.hash, "and the performer stays the signer"
 
 
 def test_a_subject_need_not_be_a_uuid() -> None:
