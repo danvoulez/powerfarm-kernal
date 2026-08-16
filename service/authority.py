@@ -27,7 +27,15 @@ from ledger.base import Ledger
 
 from .errors import AuthorizationError, ConflictError, NotFoundError, ValidationError
 from .identity import IdentityService
-from .models import ActionRequest, EvaluatedAction, RequestPrincipal
+from .models import (
+    OAUTH_CLIENT,
+    PERFORMED_BY,
+    REQUESTED_BY,
+    REQUESTER_KIND,
+    ActionRequest,
+    EvaluatedAction,
+    RequestPrincipal,
+)
 
 
 class RuleResolver(Protocol):
@@ -120,7 +128,6 @@ class AuthorityService:
         self, request: ActionRequest, principal: RequestPrincipal | None = None
     ) -> EvaluatedAction:
         command = request.command()
-        context = request.context()
         current_cut = self._ledger.history_cut()
         history_cut = request.history_cut if request.history_cut is not None else current_cut
         registry_cut = request.registry_cut if request.registry_cut is not None else history_cut
@@ -128,11 +135,21 @@ class AuthorityService:
             raise ValidationError("history_cut is unknown or not closed under ancestry")
         if not self._ledger.is_closed_cut(registry_cut) or not registry_cut <= history_cut:
             raise ValidationError("registry_cut must be an ancestry-closed subset of history_cut")
-        self._identities.require_binding(command.identity_hash, principal)
+        # The Command's Identity is the *performer*: whoever holds the key that
+        # signed it. The requester is resolved separately, below.
         identity = self._ledger.get_identity(command.identity_hash, history_cut)
         if identity is None:
             raise NotFoundError("Identity or valid signing key not found at declared cut")
         self._verify_signature(identity, command)
+        requested_by, requester_kind = self._identities.resolve_requester(
+            identity, principal, history_cut
+        )
+        context = request.context({
+            REQUESTED_BY: requested_by,
+            PERFORMED_BY: identity.hash,
+            REQUESTER_KIND: requester_kind,
+            OAUTH_CLIENT: principal.client_id if principal is not None else identity.hash,
+        })
         self._validate_payload(request)
         self._validate_registry(request, context, registry_cut)
         rules = self._rules.resolve(command, context, history_cut, registry_cut)

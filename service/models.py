@@ -14,6 +14,20 @@ from .errors import ValidationError
 
 HASH_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
+# Context keys the service resolves and the caller may never assert.
+#
+# Authentication says who is presenting the request; the Command signature says
+# which institutional participant is proposing the transition. Those are two
+# different questions, and separating them is what lets one participant act *on
+# request of* another. Rules then decide whether that relation carries authority
+# -- a difference between requester and performer must be authorized, not merely
+# tolerated.
+REQUESTED_BY = "request.requested_by"
+PERFORMED_BY = "request.performed_by"
+REQUESTER_KIND = "request.requester_kind"
+OAUTH_CLIENT = "request.oauth_client"
+DERIVED_CONTEXT_KEYS = frozenset({REQUESTED_BY, PERFORMED_BY, REQUESTER_KIND, OAUTH_CLIENT})
+
 
 def require_hash(value: str, field: str) -> str:
     if not HASH_PATTERN.fullmatch(value):
@@ -73,8 +87,26 @@ class ActionRequest:
             signature=decode_signature(self.signature),
         )
 
-    def context(self) -> Context:
-        return Context(self.context_values, self.context_types)
+    def context(self, derived: Mapping[str, str] | None = None) -> Context:
+        """Client Context, with the Kernel-derived keys layered on top.
+
+        The derived keys are not merged politely -- a request that supplies one
+        is refused outright. `requested_by` is worth nothing if a caller can
+        assert it, so the only way it enters history is by being resolved from a
+        verified token through `principal_bindings`.
+        """
+        if derived is None:
+            return Context(self.context_values, self.context_types)
+        supplied = DERIVED_CONTEXT_KEYS & self.context_values.keys()
+        if supplied:
+            raise ValidationError(
+                "Kernel-derived Context keys may not be supplied by the caller: "
+                + ", ".join(sorted(supplied))
+            )
+        return Context(
+            {**self.context_values, **derived},
+            {**self.context_types, **{key: key for key in derived}},
+        )
 
 
 @dataclass(frozen=True, slots=True)
