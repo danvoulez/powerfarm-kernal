@@ -20,9 +20,7 @@ CLIENT = "santo-andre-os"
 
 
 def principal(issuer: str, subject: str) -> RequestPrincipal:
-    # `scopes` is still on the model; step 7 removes it. Powerfarm authority
-    # comes from Rules, never from an OAuth scope.
-    return RequestPrincipal(issuer, subject, CLIENT, ())
+    return RequestPrincipal(issuer, subject, CLIENT)
 
 
 def identity_of(seed: bytes) -> tuple[Identity, Ed25519PrivateKey]:

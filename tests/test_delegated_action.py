@@ -98,7 +98,7 @@ def action(platform: Identity, key: Ed25519PrivateKey, payload_hash: str,
 
 
 def principal() -> RequestPrincipal:
-    return RequestPrincipal(ISSUER, SUBJECT, "santo-andre-os", ())
+    return RequestPrincipal(ISSUER, SUBJECT, "santo-andre-os")
 
 
 def test_a_caller_cannot_assert_who_requested() -> None:
