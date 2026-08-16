@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 powerfarm-kernel-mcp = "protocol.mcp.server:main"
+powerfarm-genesis-material = "genesis.material:main"
 
 [project.optional-dependencies]
 dev = [

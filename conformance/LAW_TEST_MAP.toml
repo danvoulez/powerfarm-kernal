@@ -163,8 +163,8 @@ blocked_by = "no registered Act type yet carries secret-bearing material; the la
 
 [PF-19]
 title = "Acyclic Genesis"
-status = "IMPLEMENTED"
-tests = ["tests/test_genesis.py::test_genesis_is_stable_and_dependency_ordered"]
+status = "DESIGN_ONLY"
+blocked_by = "M3 -- candidate material is dependency-bound, but no Genesis Acts exist until the real admission ceremony runs"
 
 [PF-20]
 title = "Self-Government"

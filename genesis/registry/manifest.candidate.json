@@ -1,0 +1,3383 @@
+{
+  "canonicalization": "rfc8785-jcs-v1",
+  "counts_by_kind": {
+    "act_type": 34,
+    "command_type": 18,
+    "context_type": 14,
+    "mandate": 2,
+    "office": 1,
+    "projector": 7,
+    "relation_type": 18,
+    "rule": 8
+  },
+  "definition_count": 102,
+  "definitions": [
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "AmendmentEnacted",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "approval_act_hashes": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "delay_satisfied_at_cut": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "proposal_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "proposal_act_hash",
+            "approval_act_hashes",
+            "delay_satisfied_at_cut"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "8b1742d9205ad4a35311d99e4911b3afeb19f6375cc60329c504c4fe8b31293e"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "AmendmentObjected",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "grounds": {
+              "type": "string"
+            },
+            "proposal_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "proposal_act_hash",
+            "grounds"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "14faa0b36da2c48a6914454819eb237dad8fd66504970d357ec51c916f345df4"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "AmendmentProposed",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "eternity_clause_check": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "replacement_definition_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "target_definition_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "target_definition_hash",
+            "replacement_definition_hash",
+            "rationale",
+            "eternity_clause_check"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "ddae61ef595690f64e3894e9e529c5e276ffa2ed9aa8962eb92d711e09e5acc2"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "AuthorityGranted",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "delegation_depth": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "expires_at_act": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "grantee_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "mandate_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "office_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "on_behalf_of": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "powers": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "grantee_identity_hash",
+            "office_hash",
+            "mandate_hash",
+            "on_behalf_of",
+            "powers",
+            "delegation_depth",
+            "expires_at_act",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "0d86431cdab8484b551473af694bb2b2733681f0e62e2432fde520e0bf2a5072"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "AuthorityRevoked",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "effective_immediately": {
+              "type": "boolean"
+            },
+            "grant_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "enum": [
+                "delegation_ended",
+                "expired",
+                "misconduct",
+                "succession",
+                "voluntary"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "grant_act_hash",
+            "reason",
+            "effective_immediately"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "f611336af4a41d846a3f604011542477727b9d22949937aa9da1103bc0fb5e46"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "AuthorizationRequested",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "8a6f6551d3939bf4f34e0015693316ef01f8349c00802d1957cae550023c09d9"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "AuthorizationResolved",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "87f4e8c7597b87d2ce71ce3d9629dd953c129217728c73e11d333c8bd49c9136"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "AuthorizationReviewed",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "f03f273031de0d553cab3c89d26d1955425d70a3400c1ec9c4c142bdc5115e84"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "CommandDenied",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "5b0cac0f2f5f5554c08cef9bcb31f54ca0db6ce424e2279f6ed612f190a28efb"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "CommandExpired",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "65f0f51272a35afe58ff9f3b042005c4eac251816f1040f4bd8a81014653ed33"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "CommandRejected",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "19a9ee30606dc94351805171ced496ba683526a405bf00d2ee7bb17a8630c07a"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "CommandSubmitted",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "5310f5a3243e6eb04f8138a4128a77f530e3e4e46a3d0d9099abbe1d6f04374f"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "CommandSuperseded",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "55535e1c1e84a5616611bbbb1301163a560488da9d448a6df63f1e4f87b9e75d"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "CommandValidated",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "3e949853d5b3864937cebe30210f0f4786780e1042b9990f6343aac30148a035"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "DefinitionRegistered",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "constitutional": {
+              "type": "boolean"
+            },
+            "definition_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "act_type",
+                "command_type",
+                "context_type",
+                "disclosure_profile",
+                "effect_phase",
+                "machinery_class",
+                "mandate",
+                "node_species",
+                "office",
+                "projector",
+                "relation_type",
+                "rule"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "schema_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "version": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "version",
+            "constitutional",
+            "definition_hash",
+            "schema_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "5cded3562e91738b63b8e13a35ddd77bb5f25d33dc223be65cf30d0cb0403f59"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "DirectorNominated",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "mandate_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "nominee_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "statement": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "nominee_identity_hash",
+            "mandate_hash",
+            "statement"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "d3f732108b9043c6e1f915fb18a39f0f74adb5c5e9e544507092fbb33eac9ff9"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ExternalEffectAuthorized",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "effect_request_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "effect_request_act_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "c60a534260b18a14f3ad658724e47c27f234e9342374e53ba47b05d3c6441ff5"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ExternalEffectDispatchFailed",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "effect_request_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "effect_request_act_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "6b5e7777f931693a52d7ed4630c63dfcbe147c09d552848f01b156ae993ab3db"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ExternalEffectDispatched",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "dispatched_content_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "effect_request_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "external_authority_evidence": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "performed_by_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "effect_request_act_hash",
+            "performed_by_identity_hash",
+            "external_authority_evidence",
+            "dispatched_content_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "9221bb4e729a17c235fa18cc79a30d7618a679ba5cff60d0cb7185f95a60e247"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ExternalEffectRequested",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "counterparty_ref": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "domain": {
+              "type": "string"
+            },
+            "effect_kind_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "on_behalf_of": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "subject_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "summary": {
+              "type": "string"
+            },
+            "threshold_unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "threshold_value": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "effect_kind_hash",
+            "on_behalf_of",
+            "subject_hash",
+            "domain",
+            "threshold_value",
+            "threshold_unit",
+            "counterparty_ref",
+            "summary"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "46d9884f7c4faa8ff539c8edb9087c4af01d833e29ff75c11374f3024c157632"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ExternalEffectRetried",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "effect_request_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "effect_request_act_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "c56ee30116be9de2ccd278330e88732531d20915493dd492cfd217e938cb1ee5"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ExternalFactClaimed",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "claim_statement": {
+              "type": "string"
+            },
+            "claimed_content_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "effect_request_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "obligations": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "observation_act_hashes": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "effect_request_act_hash",
+            "observation_act_hashes",
+            "claimed_content_hash",
+            "obligations",
+            "claim_statement"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "f14c9d8552bdab61b09b0dfbf374372b47d2f336b03788cad8222d4ac5aa7f94"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "GenesisClosed",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "config_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "config_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "8f39e500efe9c25922b24d1c8af42cecce86a2d7f31e0992c1e831fca8841816"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "GenesisCreated",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "config_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "config_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "ce71b1bbdc3cec93b84e033b81af7b5d44ea9e48e9fa0057323de567864c88db"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "IdentityCreated",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "attributes_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "identity_kind": {
+              "enum": [
+                "agent",
+                "application",
+                "device",
+                "human",
+                "integration",
+                "machine",
+                "model",
+                "organization",
+                "reviewer",
+                "scheduler",
+                "service",
+                "workflow"
+              ],
+              "type": "string"
+            },
+            "public_keys": {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "identity_kind",
+            "public_keys",
+            "attributes_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "56372ec47112c30566dd9f5586e52f568741fb03da2668607c7ecaef83c06e07"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "KeyRotated",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "add_keys": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "grace_until_act": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "retire_keys": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "identity_hash",
+            "add_keys",
+            "retire_keys",
+            "grace_until_act"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "d0a5b19abc9f6a80303a4c53c75c9d94229f116a9ae987cb91ce7fa212c6793c"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ObservationAdmitted",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "evidence_hashes": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "observation_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "observed_effect_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "observer_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reported_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "observed_effect_hash",
+            "observer_identity_hash",
+            "evidence_hashes",
+            "observation_hash",
+            "reported_at"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "a322cf8dc52137e98795103debd98a6729af13d76944dfc62e8206c35339b9f7"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "companion": {
+          "cardinality": "exactly_one",
+          "writer": "principal_bindings"
+        },
+        "kind": "act_type",
+        "name": "PrincipalLinked",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "issuer": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "issuer",
+            "subject",
+            "identity_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "933cc5d2efd54b037265157c1220410793bb1193041163a43998f6a54f34b5dd"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "companion": {
+          "cardinality": "exactly_one",
+          "writer": "principal_bindings"
+        },
+        "kind": "act_type",
+        "name": "PrincipalRevoked",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "issuer": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "issuer",
+            "subject",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "40928f7862fd4b33c74480e123afe61a7862515ab9c323aa81c834c97a2ad5a4"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "RegistryCreated",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "config_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "config_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "a6a841bea81eaf6bd2bc88795f197c5133ece5d2955fa6fb2e92dd20223df98b"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ReviewRequested",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "30696f34ae3eacdfe59fa958bcb668ba6a0d9235cc787b0cd0132c1dabc97a5b"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "ReviewerAppointed",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "expires_at_act": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "quorum_role": {
+              "enum": [
+                "ordinary",
+                "constitutional"
+              ],
+              "type": "string"
+            },
+            "remit": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "reviewer_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "reviewer_identity_hash",
+            "remit",
+            "quorum_role",
+            "expires_at_act"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "ad234774cadcf3d7990985ac99213eb6a48e66b58ec142bb4c69558be7bbe7a5"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "RootAuthorityGranted",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "config_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "config_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "7a65d8cfceb28d37538f4a6e41bee5d3bce6a0b3f65fa83411e59ffcbb5c9c58"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "act_type",
+        "name": "RootIdentityCreated",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "config_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "config_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "6c4e7d23ff04f8594ab29384e38a2abb3f5abe86c0c8dbc710bf167acaacaa03"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "AdmitObservation",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "evidence_hashes": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "observation_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "observed_effect_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "observer_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reported_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "observed_effect_hash",
+            "observer_identity_hash",
+            "evidence_hashes",
+            "observation_hash",
+            "reported_at"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "219c4e91abc36b6b81c0c6cdf20ca06c1ac5d0299e791566b43c7b1f58014a2b"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "AppointReviewer",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "expires_at_act": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "quorum_role": {
+              "enum": [
+                "ordinary",
+                "constitutional"
+              ],
+              "type": "string"
+            },
+            "remit": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "reviewer_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "reviewer_identity_hash",
+            "remit",
+            "quorum_role",
+            "expires_at_act"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "356c73eae658be84694495808c91a20740f8d55c657f6ea11bbc114d65eb1642"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "ClaimExternalFact",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "claim_statement": {
+              "type": "string"
+            },
+            "claimed_content_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "effect_request_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "obligations": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "observation_act_hashes": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "effect_request_act_hash",
+            "observation_act_hashes",
+            "claimed_content_hash",
+            "obligations",
+            "claim_statement"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "6fe5ba8937bf17d3858e727250e9c0ba714320abebe185bec738b7a19e1cf574"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "CreateIdentity",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "attributes_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "identity_kind": {
+              "enum": [
+                "agent",
+                "application",
+                "device",
+                "human",
+                "integration",
+                "machine",
+                "model",
+                "organization",
+                "reviewer",
+                "scheduler",
+                "service",
+                "workflow"
+              ],
+              "type": "string"
+            },
+            "public_keys": {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "identity_kind",
+            "public_keys",
+            "attributes_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "db03447528cb1a6a084a2177776143b8a06fe3c73838f0557b23f81f3f02ca79"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "DispatchExternalEffect",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "dispatched_content_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "effect_request_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "external_authority_evidence": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "performed_by_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "effect_request_act_hash",
+            "performed_by_identity_hash",
+            "external_authority_evidence",
+            "dispatched_content_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "424358605cf1a7f7ee964867c654e6ea4dfedd0f3dcfe9cdf9afafad44cd9853"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "EnactAmendment",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "approval_act_hashes": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "delay_satisfied_at_cut": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "proposal_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "proposal_act_hash",
+            "approval_act_hashes",
+            "delay_satisfied_at_cut"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "ee79ac5dc675f26963990bca108454109fdc817c805346efe47c6bbd2512e4e6"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "GrantAuthority",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "delegation_depth": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "expires_at_act": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "grantee_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "mandate_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "office_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "on_behalf_of": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "powers": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "grantee_identity_hash",
+            "office_hash",
+            "mandate_hash",
+            "on_behalf_of",
+            "powers",
+            "delegation_depth",
+            "expires_at_act",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "LinkPrincipal",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "issuer": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "issuer",
+            "subject",
+            "identity_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "3cad7db7c6e61de5095255bf3cbc46022ed131b148be88512355d2dbe77fbe3a"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "NominateDirector",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "mandate_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "nominee_identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "statement": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "nominee_identity_hash",
+            "mandate_hash",
+            "statement"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "1e4ed3c65a36e8f1563f93bde04d8bdd685075785617fc75cb928f68d1a66484"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "ObjectToAmendment",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "grounds": {
+              "type": "string"
+            },
+            "proposal_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "proposal_act_hash",
+            "grounds"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "f9dbe4138c1135e6d4ad2d8d317b4fac73d75cd7f9eb854d5b894b77ecee9c00"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "ProposeAmendment",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "eternity_clause_check": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "replacement_definition_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "target_definition_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "target_definition_hash",
+            "replacement_definition_hash",
+            "rationale",
+            "eternity_clause_check"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "02342f21422cf7b8ce4f377b3daf4b0f29ac69784fd0c84af1e7e34ab7235aa8"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "ProposeExternalEffect",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "counterparty_ref": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "domain": {
+              "type": "string"
+            },
+            "effect_kind_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "on_behalf_of": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "subject_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "summary": {
+              "type": "string"
+            },
+            "threshold_unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "threshold_value": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "effect_kind_hash",
+            "on_behalf_of",
+            "subject_hash",
+            "domain",
+            "threshold_value",
+            "threshold_unit",
+            "counterparty_ref",
+            "summary"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "78a34862a2c58c37ca08aeda844cb4d2c009d3ce16180e1699cd830cc4d5a5ea"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "RegisterDefinition",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "constitutional": {
+              "type": "boolean"
+            },
+            "definition_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "act_type",
+                "command_type",
+                "context_type",
+                "disclosure_profile",
+                "effect_phase",
+                "machinery_class",
+                "mandate",
+                "node_species",
+                "office",
+                "projector",
+                "relation_type",
+                "rule"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "schema_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "version": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "version",
+            "constitutional",
+            "definition_hash",
+            "schema_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "e527fc4357afa641945f3474d83cdca19bf20bd21166f60e4f223162df57ca66"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "ReviewAuthorization",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "reason": {
+              "type": "string"
+            },
+            "reviewed_command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "verdict": {
+              "enum": [
+                "approve",
+                "reject"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "reviewed_command_hash",
+            "verdict",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "7ddd3a9248388210211790c29be583a657eb8bdd8afa23a1e1cef8b1787f42ea"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "RevokeAuthority",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "effective_immediately": {
+              "type": "boolean"
+            },
+            "grant_act_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "reason": {
+              "enum": [
+                "delegation_ended",
+                "expired",
+                "misconduct",
+                "succession",
+                "voluntary"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "grant_act_hash",
+            "reason",
+            "effective_immediately"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "45fae5b4a71bdb17a21772319a716b702ef2ac4e3a3803d18114265ec26bd004"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "RevokePrincipal",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "issuer": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            },
+            "subject": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "issuer",
+            "subject",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "d9bef7b6190649544b11c8c4afd888eae9cb7a0a4e831de45e8f2cdbae3b174f"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "RotateKey",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "add_keys": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "grace_until_act": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "retire_keys": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "identity_hash",
+            "add_keys",
+            "retire_keys",
+            "grace_until_act"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "7ed7061f5532b8b1dc02f27c254d7676f3626184c0bbd2109376e85cbd51fb7f"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "command_type",
+        "name": "SubmitCommand",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "command_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "848991a6a7155304a0c2c285479262815321771bf9aacee4827a63cb4401d3dd"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "amendment.state",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "approvals": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "objections": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "proposal_act": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "proposed_at_cut": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "proposal_act",
+            "approvals",
+            "objections",
+            "proposed_at_cut"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "4de27f25dd94478d3905e8b95b2b6ce10243ac815c97a8bff8f45cbff89fcf5a"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "authority.grants",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "grants": {
+              "items": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "additionalProperties": false,
+                "properties": {
+                  "depth": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "grant_act": {
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "grantee": {
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "mandate": {
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "office": {
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "on_behalf_of": {
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "powers": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "grant_act",
+                  "grantee",
+                  "office",
+                  "mandate",
+                  "on_behalf_of",
+                  "powers",
+                  "depth"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "grants"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "3a98cf7029cab9af016087782a4f5e29a6866920c9c1c677cb457c53129bc7e3"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "cut.advance",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "advanced": {
+              "type": "boolean"
+            },
+            "delta": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "delta_act_types": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "advanced",
+            "delta",
+            "delta_act_types"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "ad65d74a7f1bb6696c9231bde533632ea558da77582ac56cb7ceb8c7f4d9b620"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "cut.declared",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "cut": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "cut"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "3f0a2ffc7a1b21dea01ee684659f4aab99e1e5dcc6d52879a906b29b8a3eb4a9"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "delegation.cut",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "cut": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "cut"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "58e524dad4d31ef7aaf1f8e20609b61575889d111e5de2ca49b4a4934650f3b9"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "external.authority_evidence",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "evidence": {
+              "items": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "additionalProperties": false,
+                "properties": {
+                  "described_as": {
+                    "type": "string"
+                  },
+                  "hash": {
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "hash",
+                  "kind",
+                  "described_as"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "predicate_ref": {
+              "type": "string"
+            },
+            "satisfied": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "predicate_ref",
+            "evidence",
+            "satisfied"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "790593b9cb33315cdab3dcafc359e5b54fbfb4710b6fce14e253fb987d627763"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "kind": "context_type",
+        "name": "request.metadata",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": true,
+          "properties": {},
+          "required": [],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "a0c21b4ea7ae7cabaee9cbe7f7e803adf00ba94e390ce8f929883f50f2d9eb8c"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "request.oauth_client",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "client_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "client_id"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "3189557c60bf5c4e95b960c13f3e63858797a9beb9dd67d10ad6eb26e9f5be07"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "request.origin",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "address": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "address"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "348e1bca5d98e7d00a2f659a3da49db15dce8073b62a764181e9cc3fa5a03d24"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "request.performed_by",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "identity_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "7e8eec862d02548406938ffa6f45c0f6d01cbbbe70272b59ccb2ae36beebe585"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "request.requested_by",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "identity_hash": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "identity_hash"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "835f285461ce5198f14d3820ea433aa0fe8cdd642a773a0db20d6f961e4bfa18"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "request.requester_kind",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "7bf049a2ec9fd1211e09dee1420150b567baf6235b854e07261195952a12fd73"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "review.acts",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "acts": {
+              "items": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "acts"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "cad7f0c467cda129e697f5b929da4cdbc994921d0fbc0df86aa91b8b8d086c44"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "kind": "context_type",
+        "name": "time.claimed",
+        "value_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "claimed_when": {
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.+-]+Z?$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "claimed_when"
+          ],
+          "type": "object"
+        },
+        "version": 1
+      },
+      "definition_hash": "041fba6e50950861ec6ed8e2462c75f75a299f5094806cf8a1b90748c360b3f3"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "boundary_shape": "single",
+        "delegation_depth": 0,
+        "external_predicates_ref": null,
+        "kind": "mandate",
+        "name": "director.mandate.boundary.v1",
+        "powers": [
+          "ordinary_registry",
+          "operational_authority",
+          "budgets",
+          "research",
+          "publication",
+          "external_representation"
+        ],
+        "prohibitions": [
+          "constitutional_enactment",
+          "grant_root",
+          "self_extension",
+          "appoint_own_reviewers"
+        ],
+        "version": 1
+      },
+      "definition_hash": "3b670d16b76431da17c0926993938774e6bc164a3a2fdd06c1faf4fd1f33e5e4"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "delegation_depth": 0,
+        "exhausted_at": "GenesisClosed",
+        "external_predicates_ref": null,
+        "kind": "mandate",
+        "name": "root.mandate.v1",
+        "powers": [
+          "genesis_registration",
+          "initial_identity",
+          "initial_office_holder"
+        ],
+        "prohibitions": [
+          "post_genesis_operation",
+          "external_representation",
+          "director_operation"
+        ],
+        "version": 1
+      },
+      "definition_hash": "a20e8defd23e4a8aa4b752ddc2a2f686bf00897a6bd0778845d0a85228121e5b"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "kind": "office",
+        "mandate_kinds": [
+          "3b670d16b76431da17c0926993938774e6bc164a3a2fdd06c1faf4fd1f33e5e4"
+        ],
+        "max_holders": 2,
+        "min_holders": 1,
+        "name": "powerfarm.director",
+        "recovery_rule": "c890725cad15330817b7d4e0904849d26b7f78865343e0707702bed0518f03d3",
+        "succession_rule": "c890725cad15330817b7d4e0904849d26b7f78865343e0707702bed0518f03d3",
+        "version": 1
+      },
+      "definition_hash": "945088c84f6658f9d5975c1f1f4ff285b586ba0529b74c97c0868c154f9f8218"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "deterministic": true,
+        "inputs": [
+          "0d86431cdab8484b551473af694bb2b2733681f0e62e2432fde520e0bf2a5072",
+          "f611336af4a41d846a3f604011542477727b9d22949937aa9da1103bc0fb5e46"
+        ],
+        "kind": "projector",
+        "name": "authority.active_grants",
+        "version": 1
+      },
+      "definition_hash": "e364739cc973f3abbb8b4e900225d2fa5b6345183a4725083000b8f713f57e77"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "deterministic": true,
+        "inputs": [
+          "0d86431cdab8484b551473af694bb2b2733681f0e62e2432fde520e0bf2a5072",
+          "14faa0b36da2c48a6914454819eb237dad8fd66504970d357ec51c916f345df4",
+          "19a9ee30606dc94351805171ced496ba683526a405bf00d2ee7bb17a8630c07a",
+          "30696f34ae3eacdfe59fa958bcb668ba6a0d9235cc787b0cd0132c1dabc97a5b",
+          "3e949853d5b3864937cebe30210f0f4786780e1042b9990f6343aac30148a035",
+          "40928f7862fd4b33c74480e123afe61a7862515ab9c323aa81c834c97a2ad5a4",
+          "46d9884f7c4faa8ff539c8edb9087c4af01d833e29ff75c11374f3024c157632",
+          "5310f5a3243e6eb04f8138a4128a77f530e3e4e46a3d0d9099abbe1d6f04374f",
+          "55535e1c1e84a5616611bbbb1301163a560488da9d448a6df63f1e4f87b9e75d",
+          "56372ec47112c30566dd9f5586e52f568741fb03da2668607c7ecaef83c06e07",
+          "5b0cac0f2f5f5554c08cef9bcb31f54ca0db6ce424e2279f6ed612f190a28efb",
+          "5cded3562e91738b63b8e13a35ddd77bb5f25d33dc223be65cf30d0cb0403f59",
+          "65f0f51272a35afe58ff9f3b042005c4eac251816f1040f4bd8a81014653ed33",
+          "6b5e7777f931693a52d7ed4630c63dfcbe147c09d552848f01b156ae993ab3db",
+          "6c4e7d23ff04f8594ab29384e38a2abb3f5abe86c0c8dbc710bf167acaacaa03",
+          "7a65d8cfceb28d37538f4a6e41bee5d3bce6a0b3f65fa83411e59ffcbb5c9c58",
+          "87f4e8c7597b87d2ce71ce3d9629dd953c129217728c73e11d333c8bd49c9136",
+          "8a6f6551d3939bf4f34e0015693316ef01f8349c00802d1957cae550023c09d9",
+          "8b1742d9205ad4a35311d99e4911b3afeb19f6375cc60329c504c4fe8b31293e",
+          "8f39e500efe9c25922b24d1c8af42cecce86a2d7f31e0992c1e831fca8841816",
+          "9221bb4e729a17c235fa18cc79a30d7618a679ba5cff60d0cb7185f95a60e247",
+          "933cc5d2efd54b037265157c1220410793bb1193041163a43998f6a54f34b5dd",
+          "a322cf8dc52137e98795103debd98a6729af13d76944dfc62e8206c35339b9f7",
+          "a6a841bea81eaf6bd2bc88795f197c5133ece5d2955fa6fb2e92dd20223df98b",
+          "ad234774cadcf3d7990985ac99213eb6a48e66b58ec142bb4c69558be7bbe7a5",
+          "c56ee30116be9de2ccd278330e88732531d20915493dd492cfd217e938cb1ee5",
+          "c60a534260b18a14f3ad658724e47c27f234e9342374e53ba47b05d3c6441ff5",
+          "ce71b1bbdc3cec93b84e033b81af7b5d44ea9e48e9fa0057323de567864c88db",
+          "d0a5b19abc9f6a80303a4c53c75c9d94229f116a9ae987cb91ce7fa212c6793c",
+          "d3f732108b9043c6e1f915fb18a39f0f74adb5c5e9e544507092fbb33eac9ff9",
+          "ddae61ef595690f64e3894e9e529c5e276ffa2ed9aa8962eb92d711e09e5acc2",
+          "f03f273031de0d553cab3c89d26d1955425d70a3400c1ec9c4c142bdc5115e84",
+          "f14c9d8552bdab61b09b0dfbf374372b47d2f336b03788cad8222d4ac5aa7f94",
+          "f611336af4a41d846a3f604011542477727b9d22949937aa9da1103bc0fb5e46"
+        ],
+        "kind": "projector",
+        "name": "causal.topological",
+        "version": 1
+      },
+      "definition_hash": "6ab15af623efe331d3c729aa81f1a44ba815b600d13f99f28024daf8cff65b36"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "deterministic": true,
+        "inputs": [
+          "46d9884f7c4faa8ff539c8edb9087c4af01d833e29ff75c11374f3024c157632",
+          "9221bb4e729a17c235fa18cc79a30d7618a679ba5cff60d0cb7185f95a60e247",
+          "a322cf8dc52137e98795103debd98a6729af13d76944dfc62e8206c35339b9f7",
+          "f14c9d8552bdab61b09b0dfbf374372b47d2f336b03788cad8222d4ac5aa7f94"
+        ],
+        "kind": "projector",
+        "name": "external.commitments",
+        "version": 1
+      },
+      "definition_hash": "4f582065c2209bd508da837fdb8a2396ad3567991b183a80f871432d9cbb915e"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "deterministic": true,
+        "inputs": [
+          "56372ec47112c30566dd9f5586e52f568741fb03da2668607c7ecaef83c06e07",
+          "d0a5b19abc9f6a80303a4c53c75c9d94229f116a9ae987cb91ce7fa212c6793c"
+        ],
+        "kind": "projector",
+        "name": "identity_keys.at_cut",
+        "version": 1
+      },
+      "definition_hash": "9e5604cb39e77f6f95606565c22240b9bc6a9a60f338e999282b0dea5f4c6a20"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "deterministic": true,
+        "inputs": [
+          "0d86431cdab8484b551473af694bb2b2733681f0e62e2432fde520e0bf2a5072",
+          "f611336af4a41d846a3f604011542477727b9d22949937aa9da1103bc0fb5e46"
+        ],
+        "kind": "projector",
+        "name": "office.holders",
+        "version": 1
+      },
+      "definition_hash": "1dde6150feb802d4718584e2e9a4ca1f8182aef4455bf3d0ffbc5bffa2e4161b"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "deterministic": true,
+        "inputs": [
+          "5cded3562e91738b63b8e13a35ddd77bb5f25d33dc223be65cf30d0cb0403f59",
+          "8b1742d9205ad4a35311d99e4911b3afeb19f6375cc60329c504c4fe8b31293e"
+        ],
+        "kind": "projector",
+        "name": "registry.current",
+        "version": 1
+      },
+      "definition_hash": "c2078e3689e9fe4c445044bb95e55b11f8df600e7c9d1f2131c149e1ef8c9b89"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "deterministic": true,
+        "inputs": [
+          "0d86431cdab8484b551473af694bb2b2733681f0e62e2432fde520e0bf2a5072",
+          "14faa0b36da2c48a6914454819eb237dad8fd66504970d357ec51c916f345df4",
+          "19a9ee30606dc94351805171ced496ba683526a405bf00d2ee7bb17a8630c07a",
+          "30696f34ae3eacdfe59fa958bcb668ba6a0d9235cc787b0cd0132c1dabc97a5b",
+          "3e949853d5b3864937cebe30210f0f4786780e1042b9990f6343aac30148a035",
+          "40928f7862fd4b33c74480e123afe61a7862515ab9c323aa81c834c97a2ad5a4",
+          "46d9884f7c4faa8ff539c8edb9087c4af01d833e29ff75c11374f3024c157632",
+          "5310f5a3243e6eb04f8138a4128a77f530e3e4e46a3d0d9099abbe1d6f04374f",
+          "55535e1c1e84a5616611bbbb1301163a560488da9d448a6df63f1e4f87b9e75d",
+          "56372ec47112c30566dd9f5586e52f568741fb03da2668607c7ecaef83c06e07",
+          "5b0cac0f2f5f5554c08cef9bcb31f54ca0db6ce424e2279f6ed612f190a28efb",
+          "5cded3562e91738b63b8e13a35ddd77bb5f25d33dc223be65cf30d0cb0403f59",
+          "65f0f51272a35afe58ff9f3b042005c4eac251816f1040f4bd8a81014653ed33",
+          "6b5e7777f931693a52d7ed4630c63dfcbe147c09d552848f01b156ae993ab3db",
+          "6c4e7d23ff04f8594ab29384e38a2abb3f5abe86c0c8dbc710bf167acaacaa03",
+          "7a65d8cfceb28d37538f4a6e41bee5d3bce6a0b3f65fa83411e59ffcbb5c9c58",
+          "87f4e8c7597b87d2ce71ce3d9629dd953c129217728c73e11d333c8bd49c9136",
+          "8a6f6551d3939bf4f34e0015693316ef01f8349c00802d1957cae550023c09d9",
+          "8b1742d9205ad4a35311d99e4911b3afeb19f6375cc60329c504c4fe8b31293e",
+          "8f39e500efe9c25922b24d1c8af42cecce86a2d7f31e0992c1e831fca8841816",
+          "9221bb4e729a17c235fa18cc79a30d7618a679ba5cff60d0cb7185f95a60e247",
+          "933cc5d2efd54b037265157c1220410793bb1193041163a43998f6a54f34b5dd",
+          "a322cf8dc52137e98795103debd98a6729af13d76944dfc62e8206c35339b9f7",
+          "a6a841bea81eaf6bd2bc88795f197c5133ece5d2955fa6fb2e92dd20223df98b",
+          "ad234774cadcf3d7990985ac99213eb6a48e66b58ec142bb4c69558be7bbe7a5",
+          "c56ee30116be9de2ccd278330e88732531d20915493dd492cfd217e938cb1ee5",
+          "c60a534260b18a14f3ad658724e47c27f234e9342374e53ba47b05d3c6441ff5",
+          "ce71b1bbdc3cec93b84e033b81af7b5d44ea9e48e9fa0057323de567864c88db",
+          "d0a5b19abc9f6a80303a4c53c75c9d94229f116a9ae987cb91ce7fa212c6793c",
+          "d3f732108b9043c6e1f915fb18a39f0f74adb5c5e9e544507092fbb33eac9ff9",
+          "ddae61ef595690f64e3894e9e529c5e276ffa2ed9aa8962eb92d711e09e5acc2",
+          "f03f273031de0d553cab3c89d26d1955425d70a3400c1ec9c4c142bdc5115e84",
+          "f14c9d8552bdab61b09b0dfbf374372b47d2f336b03788cad8222d4ac5aa7f94",
+          "f611336af4a41d846a3f604011542477727b9d22949937aa9da1103bc0fb5e46"
+        ],
+        "kind": "projector",
+        "name": "trajectory.graph",
+        "version": 1
+      },
+      "definition_hash": "4271664ecc3d72580efdd45769bf846699392e053722ebf264d47c5671d2b16e"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "anchored_at",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "25a1d2af6703786eaf4f363d861c334171eb4f4e9d99fb81601834fdf4b479ff"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "authorized_by",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "79d0b050f8438394f2bc4e90a9eaae3e5c7e7bafed400bcac999c580c3432551"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "caused_by",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "b3df3cb8969409d44d7c72ef29fff723df9fe5469ac34d1ad1ceef02bf56cd05"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "contradicts",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "c041c3bb636eeed2bb6dfa8a6a627b4112a57bc4598289e6cc5dd4e3dc1d96ea"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": true,
+        "name": "crafted_from",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "d583d70b9c394edd8b23fc8032de17a05714c9899cdb5187f5dff932dec50328"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "act",
+          "to": "act"
+        },
+        "kind": "relation_type",
+        "lineage": true,
+        "name": "delegated_from",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "eccde512a97170f73dc03597a82a774f2301f58827fd1bbae38b3c36f55f8f67"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": true,
+        "name": "derived_from",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "7814621dfe61a6dbcb42fdbb453f1805ce8a35bda52ebd8adfa8b1735e78b242"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "act",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "evidenced_by",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "32a76074d85853956cbd2e04420536f1a88ed4886c7622c8c2fb69592ff88cb4"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": true,
+        "name": "forked_from",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "d7aa361d6bb9fc6e5a529b9e8a3cc2ebe69323114ddc664ab18e71ceed049c10"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "identity",
+          "to": "office"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "holds_office",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "4364eac8b237133c21c97e758395a6ddb005c3acc5c967098792b0357562149b"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "matched_to",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "dde2ad184fb2ffdae85253c358c8dc1a35bc3a3386bce75472bcc8cc3fefa794"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "notarized_by",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "0c6b2cadf0ae18192e7450de8063c17e6fe53ede61f42eed79d892b00f398ec9"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "organization",
+          "to": "identity"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "represented_by",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "fd731c78ea39ff2f8994d7d7070d1c5f73055f644035b59847141dc664a3ccf5"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "reviewed_by",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "fbf3c54213b3e891ac6e0755ecb82414c066298bc63f722251db444a09125130"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": true,
+        "name": "simulated_from",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "c3ec89791c50e7bc7d75b5020c12c2c04389373b35f266c9ed22f99afe92a6c4"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "organization",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "stands_behind",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "590882db49205861a0f98263b8aab04511a750f66e6be5abd878305df5ec7f66"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": true,
+        "name": "supersedes",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "8b453da2adfcab20609d9570f4433e71c72c306274882ca0347ec35fce99f619"
+    },
+    {
+      "constitutional": false,
+      "definition": {
+        "endpoint_kinds": {
+          "from": "object",
+          "to": "object"
+        },
+        "kind": "relation_type",
+        "lineage": false,
+        "name": "supports",
+        "payload_schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "version": 1
+      },
+      "definition_hash": "e73a3e11fe22cbaa159df129f8fe4a87556446c6158cce16dd6af9b9db5dc998"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "applicability": [
+          "02342f21422cf7b8ce4f377b3daf4b0f29ac69784fd0c84af1e7e34ab7235aa8",
+          "f9dbe4138c1135e6d4ad2d8d317b4fac73d75cd7f9eb854d5b894b77ecee9c00",
+          "ee79ac5dc675f26963990bca108454109fdc817c805346efe47c6bbd2512e4e6"
+        ],
+        "body": {
+          "language": "powerfarm-rule-expr-v1",
+          "require": [
+            "target_not_eternity_clause",
+            "delay_elapsed",
+            "quorum_satisfied"
+          ]
+        },
+        "context_keys": [
+          {
+            "definition_hash": "3a98cf7029cab9af016087782a4f5e29a6866920c9c1c677cb457c53129bc7e3",
+            "name": "authority.grants"
+          },
+          {
+            "definition_hash": "4de27f25dd94478d3905e8b95b2b6ce10243ac815c97a8bff8f45cbff89fcf5a",
+            "name": "amendment.state"
+          }
+        ],
+        "kind": "rule",
+        "name": "amendment-or-fork",
+        "parameters": {
+          "delay_days": 30,
+          "director_role": "propose_only",
+          "mode": "in_universe",
+          "quorum": 2
+        },
+        "version": 1
+      },
+      "definition_hash": "71e8b641663a75d2627934c7dfc37dbaef41137dc38e23ae212db868af13a08b"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "applicability": [],
+        "body": {
+          "deny_if": [
+            "research_compass_used_as_grant",
+            "direction_used_as_authority"
+          ],
+          "language": "powerfarm-rule-expr-v1"
+        },
+        "context_keys": [],
+        "kind": "rule",
+        "name": "compass-confers-no-authority",
+        "parameters": {
+          "scope": "all_rule_evaluations"
+        },
+        "version": 1
+      },
+      "definition_hash": "2776cebb579817c14b2324b8e206f4798e1d0605a2d7e3f91c92f3fc1cad9a3c"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "applicability": [
+          "02342f21422cf7b8ce4f377b3daf4b0f29ac69784fd0c84af1e7e34ab7235aa8",
+          "1e4ed3c65a36e8f1563f93bde04d8bdd685075785617fc75cb928f68d1a66484",
+          "219c4e91abc36b6b81c0c6cdf20ca06c1ac5d0299e791566b43c7b1f58014a2b",
+          "356c73eae658be84694495808c91a20740f8d55c657f6ea11bbc114d65eb1642",
+          "3cad7db7c6e61de5095255bf3cbc46022ed131b148be88512355d2dbe77fbe3a",
+          "424358605cf1a7f7ee964867c654e6ea4dfedd0f3dcfe9cdf9afafad44cd9853",
+          "45fae5b4a71bdb17a21772319a716b702ef2ac4e3a3803d18114265ec26bd004",
+          "6fe5ba8937bf17d3858e727250e9c0ba714320abebe185bec738b7a19e1cf574",
+          "78a34862a2c58c37ca08aeda844cb4d2c009d3ce16180e1699cd830cc4d5a5ea",
+          "7ddd3a9248388210211790c29be583a657eb8bdd8afa23a1e1cef8b1787f42ea",
+          "7ed7061f5532b8b1dc02f27c254d7676f3626184c0bbd2109376e85cbd51fb7f",
+          "848991a6a7155304a0c2c285479262815321771bf9aacee4827a63cb4401d3dd",
+          "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67",
+          "d9bef7b6190649544b11c8c4afd888eae9cb7a0a4e831de45e8f2cdbae3b174f",
+          "db03447528cb1a6a084a2177776143b8a06fe3c73838f0557b23f81f3f02ca79",
+          "e527fc4357afa641945f3474d83cdca19bf20bd21166f60e4f223162df57ca66",
+          "ee79ac5dc675f26963990bca108454109fdc817c805346efe47c6bbd2512e4e6",
+          "f9dbe4138c1135e6d4ad2d8d317b4fac73d75cd7f9eb854d5b894b77ecee9c00"
+        ],
+        "body": {
+          "else": "REAUTHORIZE",
+          "if": "cut.advance.advanced == false",
+          "language": "powerfarm-rule-expr-v1",
+          "then": "VALID"
+        },
+        "context_keys": [
+          {
+            "definition_hash": "3f0a2ffc7a1b21dea01ee684659f4aab99e1e5dcc6d52879a906b29b8a3eb4a9",
+            "name": "cut.declared"
+          },
+          {
+            "definition_hash": "ad65d74a7f1bb6696c9231bde533632ea558da77582ac56cb7ceb8c7f4d9b620",
+            "name": "cut.advance"
+          }
+        ],
+        "kind": "rule",
+        "name": "declared-decision-cut",
+        "parameters": {
+          "drift_rejection_act_type": "CommandDenied",
+          "survival_rungs_admitted": [
+            0
+          ],
+          "unconditional_commit_regardless": false
+        },
+        "version": 1
+      },
+      "definition_hash": "d886129b7a129f81bdfe376df592afcc7b5e4d879f2b255f34f1d981075ddfb0"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "applicability": [
+          "02342f21422cf7b8ce4f377b3daf4b0f29ac69784fd0c84af1e7e34ab7235aa8",
+          "1e4ed3c65a36e8f1563f93bde04d8bdd685075785617fc75cb928f68d1a66484",
+          "219c4e91abc36b6b81c0c6cdf20ca06c1ac5d0299e791566b43c7b1f58014a2b",
+          "356c73eae658be84694495808c91a20740f8d55c657f6ea11bbc114d65eb1642",
+          "3cad7db7c6e61de5095255bf3cbc46022ed131b148be88512355d2dbe77fbe3a",
+          "424358605cf1a7f7ee964867c654e6ea4dfedd0f3dcfe9cdf9afafad44cd9853",
+          "45fae5b4a71bdb17a21772319a716b702ef2ac4e3a3803d18114265ec26bd004",
+          "6fe5ba8937bf17d3858e727250e9c0ba714320abebe185bec738b7a19e1cf574",
+          "78a34862a2c58c37ca08aeda844cb4d2c009d3ce16180e1699cd830cc4d5a5ea",
+          "7ddd3a9248388210211790c29be583a657eb8bdd8afa23a1e1cef8b1787f42ea",
+          "7ed7061f5532b8b1dc02f27c254d7676f3626184c0bbd2109376e85cbd51fb7f",
+          "848991a6a7155304a0c2c285479262815321771bf9aacee4827a63cb4401d3dd",
+          "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67",
+          "d9bef7b6190649544b11c8c4afd888eae9cb7a0a4e831de45e8f2cdbae3b174f",
+          "db03447528cb1a6a084a2177776143b8a06fe3c73838f0557b23f81f3f02ca79",
+          "e527fc4357afa641945f3474d83cdca19bf20bd21166f60e4f223162df57ca66",
+          "ee79ac5dc675f26963990bca108454109fdc817c805346efe47c6bbd2512e4e6",
+          "f9dbe4138c1135e6d4ad2d8d317b4fac73d75cd7f9eb854d5b894b77ecee9c00"
+        ],
+        "body": {
+          "language": "powerfarm-rule-expr-v1",
+          "require": [
+            "active_grant",
+            "power_in_mandate",
+            "not_constitutive_power"
+          ]
+        },
+        "context_keys": [
+          {
+            "definition_hash": "3a98cf7029cab9af016087782a4f5e29a6866920c9c1c677cb457c53129bc7e3",
+            "name": "authority.grants"
+          },
+          {
+            "definition_hash": "7e8eec862d02548406938ffa6f45c0f6d01cbbbe70272b59ccb2ae36beebe585",
+            "name": "request.performed_by"
+          },
+          {
+            "definition_hash": "835f285461ce5198f14d3820ea433aa0fe8cdd642a773a0db20d6f961e4bfa18",
+            "name": "request.requested_by"
+          }
+        ],
+        "kind": "rule",
+        "name": "director-mandate-boundary",
+        "parameters": {
+          "delegation_depth_default": 0
+        },
+        "version": 1
+      },
+      "definition_hash": "68ec3b634b9a00692418819fd1c822fbdc46e0c9967f371f3126036ac5f878f9"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "applicability": [
+          "1e4ed3c65a36e8f1563f93bde04d8bdd685075785617fc75cb928f68d1a66484",
+          "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67",
+          "45fae5b4a71bdb17a21772319a716b702ef2ac4e3a3803d18114265ec26bd004"
+        ],
+        "body": {
+          "language": "powerfarm-rule-expr-v1",
+          "require": [
+            "sitting_director_nomination",
+            "review_quorum",
+            "delay_elapsed",
+            "holder_bounds_preserved"
+          ]
+        },
+        "context_keys": [
+          {
+            "definition_hash": "3a98cf7029cab9af016087782a4f5e29a6866920c9c1c677cb457c53129bc7e3",
+            "name": "authority.grants"
+          },
+          {
+            "definition_hash": "cad7f0c467cda129e697f5b929da4cdbc994921d0fbc0df86aa91b8b8d086c44",
+            "name": "review.acts"
+          }
+        ],
+        "kind": "rule",
+        "name": "director-succession",
+        "parameters": {
+          "delay_days": 7,
+          "quorum": 2
+        },
+        "version": 1
+      },
+      "definition_hash": "c890725cad15330817b7d4e0904849d26b7f78865343e0707702bed0518f03d3"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "applicability": [
+          "424358605cf1a7f7ee964867c654e6ea4dfedd0f3dcfe9cdf9afafad44cd9853",
+          "6fe5ba8937bf17d3858e727250e9c0ba714320abebe185bec738b7a19e1cf574"
+        ],
+        "body": {
+          "language": "powerfarm-rule-expr-v1",
+          "require": [
+            "internal_authority",
+            "external_predicate_satisfied"
+          ]
+        },
+        "context_keys": [
+          {
+            "definition_hash": "3a98cf7029cab9af016087782a4f5e29a6866920c9c1c677cb457c53129bc7e3",
+            "name": "authority.grants"
+          },
+          {
+            "definition_hash": "790593b9cb33315cdab3dcafc359e5b54fbfb4710b6fce14e253fb987d627763",
+            "name": "external.authority_evidence"
+          }
+        ],
+        "kind": "rule",
+        "name": "dual-authority",
+        "parameters": {},
+        "version": 1
+      },
+      "definition_hash": "334d76b691f3404bf8510e4e40353035f6fbe1e433695e6bce53a69949573938"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "applicability": [
+          "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67",
+          "e527fc4357afa641945f3474d83cdca19bf20bd21166f60e4f223162df57ca66",
+          "02342f21422cf7b8ce4f377b3daf4b0f29ac69784fd0c84af1e7e34ab7235aa8"
+        ],
+        "body": {
+          "deny_if": [
+            "power_set_grows",
+            "delegation_depth_grows",
+            "self_reviewers_appointed"
+          ],
+          "language": "powerfarm-rule-expr-v1"
+        },
+        "context_keys": [
+          {
+            "definition_hash": "3a98cf7029cab9af016087782a4f5e29a6866920c9c1c677cb457c53129bc7e3",
+            "name": "authority.grants"
+          }
+        ],
+        "kind": "rule",
+        "name": "no-self-extension",
+        "parameters": {},
+        "version": 1
+      },
+      "definition_hash": "51eae77ee708eb55dfc6da37f61765dae4b5204622c129d235115b490ce1f740"
+    },
+    {
+      "constitutional": true,
+      "definition": {
+        "applicability": [
+          "02342f21422cf7b8ce4f377b3daf4b0f29ac69784fd0c84af1e7e34ab7235aa8",
+          "1e4ed3c65a36e8f1563f93bde04d8bdd685075785617fc75cb928f68d1a66484",
+          "219c4e91abc36b6b81c0c6cdf20ca06c1ac5d0299e791566b43c7b1f58014a2b",
+          "356c73eae658be84694495808c91a20740f8d55c657f6ea11bbc114d65eb1642",
+          "3cad7db7c6e61de5095255bf3cbc46022ed131b148be88512355d2dbe77fbe3a",
+          "424358605cf1a7f7ee964867c654e6ea4dfedd0f3dcfe9cdf9afafad44cd9853",
+          "45fae5b4a71bdb17a21772319a716b702ef2ac4e3a3803d18114265ec26bd004",
+          "6fe5ba8937bf17d3858e727250e9c0ba714320abebe185bec738b7a19e1cf574",
+          "78a34862a2c58c37ca08aeda844cb4d2c009d3ce16180e1699cd830cc4d5a5ea",
+          "7ddd3a9248388210211790c29be583a657eb8bdd8afa23a1e1cef8b1787f42ea",
+          "7ed7061f5532b8b1dc02f27c254d7676f3626184c0bbd2109376e85cbd51fb7f",
+          "848991a6a7155304a0c2c285479262815321771bf9aacee4827a63cb4401d3dd",
+          "9bb43d3b85416d22ae717ccf4c5317dc5f530f19d89b79802eb4cb984d517e67",
+          "d9bef7b6190649544b11c8c4afd888eae9cb7a0a4e831de45e8f2cdbae3b174f",
+          "db03447528cb1a6a084a2177776143b8a06fe3c73838f0557b23f81f3f02ca79",
+          "e527fc4357afa641945f3474d83cdca19bf20bd21166f60e4f223162df57ca66",
+          "ee79ac5dc675f26963990bca108454109fdc817c805346efe47c6bbd2512e4e6",
+          "f9dbe4138c1135e6d4ad2d8d317b4fac73d75cd7f9eb854d5b894b77ecee9c00"
+        ],
+        "body": {
+          "allow_only": [
+            "genesis_registration",
+            "initial_identity",
+            "initial_office_holder"
+          ],
+          "exhausted_at": "GenesisClosed",
+          "external_representation": "never",
+          "language": "powerfarm-rule-expr-v1"
+        },
+        "context_keys": [
+          {
+            "definition_hash": "3a98cf7029cab9af016087782a4f5e29a6866920c9c1c677cb457c53129bc7e3",
+            "name": "authority.grants"
+          },
+          {
+            "definition_hash": "7e8eec862d02548406938ffa6f45c0f6d01cbbbe70272b59ccb2ae36beebe585",
+            "name": "request.performed_by"
+          }
+        ],
+        "kind": "rule",
+        "name": "root-mandate",
+        "parameters": {},
+        "version": 1
+      },
+      "definition_hash": "4951ca6167cb539ffe31b8516369b2697ce0093965b8a2257bc9df9197549838"
+    }
+  ],
+  "format": "powerfarm-registry-manifest-v1",
+  "hash": "sha256",
+  "manifest_hash": "b68a04a0dccd85efd431eef6e75a8e50451ae1a3e3f5b62d654d15ca9d11ba42",
+  "ratification_status": "candidate"
+}

@@ -1,0 +1,41 @@
+{
+  "status": "candidate",
+  "constitution_ratified": false,
+  "ratifications": {
+    "A-8": "OPEN",
+    "A-9": "RECOMMENDED",
+    "D-Director-03": "OPEN",
+    "D-Director-04": "OPEN",
+    "D-Director-05": "OPEN",
+    "D-Director-06": "OPEN",
+    "D-Director-07": "OPEN",
+    "D-Director-08": "OPEN",
+    "D-Genesis-04": "OPEN",
+    "R-1": "RECOMMENDED",
+    "R-4": "RECOMMENDED",
+    "R-5": "RECOMMENDED",
+    "R-9": "RECOMMENDED",
+    "R-11": "RECOMMENDED",
+    "R-12": "RECOMMENDED",
+    "R-17": "RECOMMENDED",
+    "R-19": "RECOMMENDED",
+    "R-20": "RECOMMENDED"
+  },
+  "choices": {
+    "amendment_mode": "in_universe",
+    "amendment_delay_days": 30,
+    "constitutional_quorum": 2,
+    "constitutional_reviewer_count": 3,
+    "delegation_depth_default": 0,
+    "director_amendment_role": "propose_only",
+    "mandate_boundary": "single",
+    "max_holders": 2,
+    "organization_genesis_born": true,
+    "recovery_mode": "constitutional_quorum",
+    "root_director_identity": "separate",
+    "submit_command": "retain",
+    "succession_delay_days": 7,
+    "succession_quorum": 2
+  },
+  "identities": {}
+}

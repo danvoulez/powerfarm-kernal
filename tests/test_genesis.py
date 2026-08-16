@@ -1,31 +1,21 @@
-from pathlib import Path
+import json
 
-from genesis.ceremony import ORDER, ceremony
-from kernel.canon import object_hash
+import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-CONFIG = ROOT / "genesis" / "genesis.yaml"
+from genesis.ceremony import MANIFEST, ORDER, GenesisNotReady, ceremony
 
 
-def test_genesis_is_stable_and_dependency_ordered() -> None:
-    config = CONFIG.read_bytes()
-    root, acts = ceremony(config)
+def test_m2_cannot_be_mistaken_for_a_genesis_ceremony() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
 
-    assert tuple(act["act_type"] for act in acts) == ORDER
-    assert root == acts[-1]["hash"]
-    assert ceremony(config) == (root, acts)
-
-    expected_parent: str | None = None
-    for act in acts:
-        value = {key: item for key, item in act.items() if key != "hash"}
-        assert act["parents"] == ([] if expected_parent is None else [expected_parent])
-        assert act["hash"] == object_hash("genesis_act", value)  # type: ignore[arg-type]
-        expected_parent = str(act["hash"])
+    assert manifest["genesis_order"] == list(ORDER)
+    assert manifest["ratification_status"] == "blocked"
+    with pytest.raises(GenesisNotReady, match="M2 Genesis material is blocked"):
+        ceremony(MANIFEST.read_bytes())
 
 
 def test_genesis_pins_the_definitive_canonicalization() -> None:
-    config = CONFIG.read_text(encoding="utf-8")
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
 
-    assert "specification: powerfarm-system-v3.2" in config
-    assert "canonicalization: rfc8785-jcs-v1" in config
-    assert "rfc8949" not in config
+    assert manifest["specification"] == "powerfarm-system-v3.2"
+    assert manifest["canonicalization"] == "rfc8785-jcs-v1"
