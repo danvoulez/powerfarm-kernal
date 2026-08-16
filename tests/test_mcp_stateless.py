@@ -52,7 +52,7 @@ def setup_runtime() -> tuple[KernelRuntime, Ed25519PrivateKey, str, str]:
         genesis,
         genesis,
     )
-    ledger.command_index["genesis-command"] = genesis
+    ledger.command_index["genesis-command"] = [genesis]
     private_key = Ed25519PrivateKey.generate()
     public_key = private_key.public_key().public_bytes(
         serialization.Encoding.Raw, serialization.PublicFormat.Raw

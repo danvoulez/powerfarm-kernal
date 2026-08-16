@@ -38,6 +38,10 @@ class MemoryStore:
             raise ValueError("CAS collision")
         self.objects[object_hash] = (canon, kind)
 
+    def object_canon(self, object_hash: str) -> bytes | None:
+        found = self.objects.get(object_hash)
+        return found[0] if found is not None else None
+
     def append_act(self, act: Act) -> None:
         # Uniqueness is on the Act's own hash, never on its Command (PF-23).
         if act.hash in self.acts:

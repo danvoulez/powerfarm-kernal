@@ -97,7 +97,13 @@ class MemoryLedger(MemoryStore):
         return tuple(self.acts.values())[-limit:]
 
     def resolve_principal(self, issuer: str, subject: str) -> str | None:
+        if not issuer or not subject:
+            return None
         return self.principal_bindings.get((issuer, subject))
+
+    def unlink_principal(self, issuer: str, subject: str) -> None:
+        """Revocation: the binding stops resolving. History keeps the Act."""
+        self.principal_bindings.pop((issuer, subject), None)
 
     def close(self) -> None:
         return None
